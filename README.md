@@ -213,6 +213,30 @@ The API also allows you to create aggregations on authors so you can quickly see
 **Show the top authors mentioning the term "Trump" over the past 24 hours**
 https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author&size=0
 
+```
+{
+    "aggs": {
+        "author": [
+            {
+                "doc_count": 605,
+                "key": "grrrrreat"
+            },
+            {
+                "doc_count": 329,
+                "key": "AutoModerator"
+            },
+            {
+                "doc_count": 168,
+                "key": "autotldr"
+            },
+            {
+                "doc_count": 73,
+                "key": "SnapshillBot"
+            },
+```
+
+The author aggregation will show you which authors make the most comments containing a specific query term.  From the example above, a lot of the top authors mentioning the term "Trump" are actually bots.
+
 ## Combining multiple aggregations at once
 
 Using the aggs parameter, you can combine multiple aggregations and get a lot of facet data for a specific term.  Using the examples above, we can combine all of the calls into one call and show the top submissions over the past 24 hours, the frequency of comments per hour mentioning Trump, the top authors posting about Trump and the top subreddits that have had comments made mentioning Trump.
