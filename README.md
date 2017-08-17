@@ -46,10 +46,14 @@ There are numerous additional parameters that can be used when performing a comm
 | before | Return results before this date | N/A | 
 | frequency | Used with the aggs parameter (See below) | N/A |
 
+## Using the subreddit parameter
+
 There are quite a few parameters to review, so let's start by providing some more complex examples and how to use the parameters above.  Let's continue with the previous example above and expand on our "science" keyword search.  What if we wanted to search for the term "science" but restrict it to a specific subreddit?  By using the subreddit parameter, we can do that:
 
 **Search for the most recent comments mentioning the word "science" within the subreddit /r/askscience**
 https://api.pushshift.io/reddit/search/comment/?q=science&subreddit=askscience
+
+## Using the sort and size parameters
 
 This will return 25 comments containing the term "science" but only from the /r/askscience subreddit.  Since we didn't ask for a specific sort method, the most recent comments are returned (the sort parameter defaults to "desc").  What if we wanted the first comment ever to /r/askscience that mentioned the word "science"?  We could use the sort and size parameters to handle that.
 
@@ -95,6 +99,8 @@ This is the result:
 
 From the result returned, we can see that the first comment ever made to /r/science mentioning "science" happened on epoch date 1270637661, which translates to Wednesday, April 7, 2010 10:54:21 AM (GMT).  Let's quickly go over the metadata pieces.  We can see that the execution time for this search was around 30 milliseconds.  There were a total of 36 shards searched and all were successful.  The search did not time out (timed_out parameter) which is good.  This is an attribute you may want to check if you use the API programmatically as some searches that are more complicated may sometimes time out.  The total_results value is 134,785.  This tells us the total number of comments in /r/askscience that mention the word science.  Since we did not use the before or after parameters, this number represents the entirity of the comments made to /r/askscience.
 
+## Using before and after parameters 
+
 Let's continue by using additional parameters to highlight the power of the search API.  The before and after parameters allow you to restrict the time-frame for the search by giving an epoch timestamp for both.  However, the API also understands more human-like values for the before and after parameters.  You can use a number followed by the characters s,m,h,d (which stand for second, minute, hour and day) to limit the time-frame as well.  Let's run through some examples.
 
 If you wanted to do a search for "Rome" in the subreddit /r/askhistorians but limit it only to the past 30 days, you could use the after parameter with the value 30d (30 days).  
@@ -106,3 +112,24 @@ What if there was a recent news story three days ago, but we wanted to limit the
 
 **Search all subreddits for the term "Trump" and return comments made between 2 and 4 days ago**
 https://api.pushshift.io/reddit/search/comment/?q=trump&after=4d&before=2d&sort=asc
+
+## Using fields parameter
+
+Let's say you wanted to do a search for the last 150 comments, but you only need the author and body fields returned for each comment.  Using the fields parameter, you can tell the API which pieces of information you want to filter.  This is primarily to help reduce bandwidth if you are making a lot of requests and only need specific fields returned.
+
+Here is an example using the fields parameter to search for the past 150 comments that mention "government" and only returning the author and body fields:
+
+**Search all subreddits for the term "government" and return comments with only the body and author keys**
+https://api.pushshift.io/reddit/search/comment/?q=government&size=150&fields=body,author
+
+## Using the author parameter
+
+Using one of the examples above that searched for the first occurrence of the word "science" in the subreddit /r/askscience, we saw that the author of the comment was "MockDeath."  What if we wanted to get the first 100 comments that "MockDeath" made to Reddit?  We can use the author parameter, along with the sort and size parameters.
+
+**Search all subreddits and get the first 100 comments ever made by the user /u/MockDeath**
+https://api.pushshift.io/reddit/search/comment/?author=MockDeath&sort=asc&size=100
+
+
+
+
+
