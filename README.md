@@ -133,6 +133,8 @@ https://api.pushshift.io/reddit/search/comment/?author=MockDeath&sort=asc&size=1
 
 Aggregations is a powerful method to give summary data for a search.  Using the aggs parameter, we can quickly create facets around specific parameters and see how data changes over time.  The aggs parameter for comment searches accepts the following values:  author, subreddit, reated_utc and link_id.  We can do a lot of very cool things using this parameter, so let's dive into some examples.
 
+## Using the time frequency (created_utc) aggregation
+
 Let's say we wanted to see the frequency of usage for the term "Trump" over time.  We'd like to be able to see how many comments were posted per hour over the past 7 days for this term.  Using aggregations and the aggs parameter, we can get that data quickly.  Here's an example using this criteria:
 
 **Create a time aggregation using the term trump to show the number of comments mentioning trump each hour over the past 7 days**
@@ -159,6 +161,8 @@ We used the frequency parameter along with the aggs parameter to create hourly b
 ```
 
 The doc_count value is the total number of comments containing the term "trump."  The key value is the epoch time for that particular bucket.  In this example, the first bucket has an epoch time of 1502406000 which corresponds to Thursday, August 10, 2017 11:00:00 PM.  This key value is the beginning time of the bucket, so in this example, 685 comments contain the term "trump" between the time Thursday, August 10, 2017 11:00:00 PM and Thursday, August 10, 2017 12:00:00 PM.  The frequency parameter allows you to create buckets per second, minute, hour, day, week, month, year.  Using this aggregation, you could use the data to create a chart (i.e. Highcharts) and graph the activity of comments for specific terms, authors, subreddits, etc.  This is an extremely powerful data analysis tool.
+
+## Using the subreddit aggregation
 
 What if you wanted to not only get the frequency of specific comment terms over time, but also wanted to see which subreddits were the most popular for a given term over that time period?  Here's an example of using the aggs parameters to show which subreddits had the most activity for a specific term.
 
@@ -192,6 +196,35 @@ Here is a snippet of the result:
 ```
 
 The subreddit aggregation will return the total number of comments in that subreddit that mention the query term (doc_count) as well as the total number of comments made to that subreddit during that time period (bg_count).  This not only will show you which subreddits mentioned Trump the most often, but it also gives you normalized results so that you can also see what percentage of that subreddit's comments contained the search term.  If you were to simply rank the subreddits by which subreddits mentioned the search term "trump" the most often, the results would be biased towards subreddits that also contain the most activity in general.  Using this approach, you can see both the raw count and also the normalized data.
+
+## Using the submission (link_id) aggregation
+
+The API also allows aggregations on link_id, which is another very powerful method to see which submissions are the most popular based on a specific search term.  Continuing with the examples above, let's give a scenario where this would be extremely helpful.  Within the past 24 hours, numerous big stories have dropped concerning Donald Trump.  You would like to use the API to see which submissions are related to Trump based on the number of comments mentioning him within the submissions.  We can again use the aggs parameter and set it to link_id to get this information quickly.  Let's proceed with another example:
+
+**Show submissions made within the past 24 hours that mention trump often in the comments**
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=link_id&size=0
+
+This will return under the aggs -> link_id key an array of submission objects.  The doc_count gives the total number of comments for each submission that mention the search term ("trump") and the bg_count give the total number of comments made to that submission.  This is a great way to quickly find submissions that are "hot" based on a specific search term or phrase. 
+
+## Using the author aggregation
+
+The API also allows you to create aggregations on authors so you can quickly see which authors make the most comments for a specific search term. Here is an example of using the author aggregation:
+
+**Show the top authors mentioning the term "Trump" over the past 24 hours**
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author&size=0
+
+## Combining multiple aggregations at once
+
+Using the aggs parameter, you can combine multiple aggregations and get a lot of facet data for a specific term.  Using the examples above, we can combine all of the calls into one call and show the top submissions over the past 24 hours, the frequency of comments per hour mentioning Trump, the top authors posting about Trump and the top subreddits that have had comments made mentioning Trump.
+
+**Show aggregations for authors, submissions, subreddits and time frequency for the term "Trump" over the past 24 hours**
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author,link_id,subreddit,created_utc&frequency=hour&size=0
+
+
+
+# To be continued ...
+
+
 
 
 
