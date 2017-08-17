@@ -39,12 +39,12 @@ There are numerous additional parameters that can be used when performing a comm
 | fields | One return specific fields (comma delimited) | All Fields Returned
 | sort | Return results "asc" or "desc" | "desc" |
 | sort_type | Sort by a specific attribute | "created_utc" |
-| aggs | Return aggregation data | N/A | 
+| aggs | Return aggregation data (author, link_id, created_utc, subreddit) | N/A | 
 | author | Restrict to a specific author | N/A |
 | subreddit | Restrict to a specific subreddit | N/A | 
 | after | Return results after this date | N/A |
 | before | Return results before this date | N/A | 
-| frequency | Used with the aggs parameter (See below) | N/A |
+| frequency | Used with the aggs parameter (second, minute, hour, day -- See below) | N/A |
 
 ## Using the subreddit parameter
 
