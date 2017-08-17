@@ -129,6 +129,72 @@ Using one of the examples above that searched for the first occurrence of the wo
 **Search all subreddits and get the first 100 comments ever made by the user /u/MockDeath**
 https://api.pushshift.io/reddit/search/comment/?author=MockDeath&sort=asc&size=100
 
+# Using the aggs parameter
+
+Aggregations is a powerful method to give summary data for a search.  Using the aggs parameter, we can quickly create facets around specific parameters and see how data changes over time.  The aggs parameter for comment searches accepts the following values:  author, subreddit, reated_utc and link_id.  We can do a lot of very cool things using this parameter, so let's dive into some examples.
+
+Let's say we wanted to see the frequency of usage for the term "Trump" over time.  We'd like to be able to see how many comments were posted per hour over the past 7 days for this term.  Using aggregations and the aggs parameter, we can get that data quickly.  Here's an example using this criteria:
+
+**Create a time aggregation using the term trump to show the number of comments mentioning trump each hour over the past 7 days**
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=created_utc&frequency=hour&size=0
+
+We used the frequency parameter along with the aggs parameter to create hourly buckets to show the total number of comments mentioning Trump over the past 7 days.  The size parameter was set to 0 because we are only interested in getting aggregation data and not comment data.  The aggregation data is returned in the response under the key aggs -> created_utc.  Here is a snippet of the first part of the return:
+
+```
+{
+    "aggs": {
+        "created_utc": [
+            {
+                "doc_count": 685,
+                "key": 1502406000
+            },
+            {
+                "doc_count": 1238,
+                "key": 1502409600
+            },
+            {
+                "doc_count": 1100,
+                "key": 1502413200
+            },
+```
+
+The doc_count value is the total number of comments containing the term "trump."  The key value is the epoch time for that particular bucket.  In this example, the first bucket has an epoch time of 1502406000 which corresponds to Thursday, August 10, 2017 11:00:00 PM.  This key value is the beginning time of the bucket, so in this example, 685 comments contain the term "trump" between the time Thursday, August 10, 2017 11:00:00 PM and Thursday, August 10, 2017 12:00:00 PM.  The frequency parameter allows you to create buckets per second, minute, hour, day, week, month, year.  Using this aggregation, you could use the data to create a chart (i.e. Highcharts) and graph the activity of comments for specific terms, authors, subreddits, etc.  This is an extremely powerful data analysis tool.
+
+What if you wanted to not only get the frequency of specific comment terms over time, but also wanted to see which subreddits were the most popular for a given term over that time period?  Here's an example of using the aggs parameters to show which subreddits had the most activity for a specific term.
+
+**Create a subreddit aggregation using the term trump to show the top subreddits mentioning trump over the past 7 days**
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=subreddit&size=0
+
+Here is a snippet of the result:
+
+```
+{
+    "aggs": {
+        "subreddit": [
+            {
+                "bg_count": 66,
+                "doc_count": 44,
+                "key": "lovetrumpshaters",
+                "score": 0.6666666666666666
+            },
+            {
+                "bg_count": 20,
+                "doc_count": 9,
+                "key": "Denmark_Uncensored",
+                "score": 0.45
+            },
+            {
+                "bg_count": 51,
+                "doc_count": 16,
+                "key": "WhoRedditHatesNow",
+                "score": 0.3137254901960784
+            },
+```
+
+The subreddit aggregation will return the total number of comments in that subreddit that mention the query term (doc_count) as well as the total number of comments made to that subreddit during that time period (bg_count).  This not only will show you which subreddits mentioned Trump the most often, but it also gives you normalized results so that you can also see what percentage of that subreddit's comments contained the search term.  If you were to simply rank the subreddits by which subreddits mentioned the search term "trump" the most often, the results would be biased towards subreddits that also contain the most activity in general.  Using this approach, you can see both the raw count and also the normalized data.
+
+
+
 
 
 
