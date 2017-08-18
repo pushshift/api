@@ -48,6 +48,15 @@ There are numerous additional parameters that can be used when performing a comm
 | before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
 
+## Getting comments based on id
+
+You can retrieve comments directly by using the ids parameter.  To get a batch of comments by their id, use the following example:
+
+**Retrieve three comments using their base 36 id values**
+
+https://api.pushshift.io/reddit/comment/search?ids=dlrezc8,dlrawgw,dlrhbkq
+
+
 ## Using the subreddit parameter
 
 There are quite a few parameters to review, so let's start by providing some more complex examples and how to use the parameters above.  Let's continue with the previous example above and expand on our "science" keyword search.  What if we wanted to search for the term "science" but restrict it to a specific subreddit?  By using the subreddit parameter, we can do that:
@@ -300,9 +309,33 @@ There are numerous additional parameters that can be used when performing a subm
 | contest_mode | Exclude or include content mode submissions | both allowed | "true" or "false" | 
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" | 
 
+## Get all comment ids for a particular submission
+
+This call is very helpful when used along with Reddit's API. When there are large submissions with thousands of comments, it is often difficult to get all the comment ids for a submission.  This call will return an array of comment ids when a submission id is passed to it.  The endpoint is: https://api.pushshift.io/reddit/submission/comment_ids/{base36 submission id}
+
+This call will return a data key with an array of comment ids.  You can then retrieve the actual comment information from this API or the Reddit API.  If the submission is fairly new, it is better to use the Reddit API to get the most current score for the comments.
+
+**Retrieve all comment ids for a submission object**
+
+https://api.pushshift.io/reddit/submission/comment_ids/6uey5x
 
 
-# To be continued ...
+----------------------
+# List of Endpoints
+
+| Endpoint | Description | Status | 
+| ------ | ------ | ------- |
+| /reddit/search/comment/ | Search Reddit Comments | Active
+| /reddit/search/submission/ | Search Reddit Submissions | Active
+| /reddit/submission/comment_ids/{base36-submission-id} | Retrieve comment ids for a submission object | Active
+| /reddit/analyze/user/{author-name} | Analyze a Reddit user's activity | In Development
+| /reddit/term/frequency/{term} | Analyze a term based on activity |  In Development
+| /reddit/search/all/ | Search Both Comment and Submissions | In Development
+| /reddit/trending/people | Find out who is trending on Reddit | In Development
+| /reddit/search/links | Find relevent links being shared on Reddit | In Development
+
+
+# To be continued (Currently under active development) ...
 
 
 
