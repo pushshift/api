@@ -48,6 +48,15 @@ There are numerous additional parameters that can be used when performing a comm
 | before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
 
+## Getting comments based on id
+
+You can retrieve comments directly by using the ids parameter.  To get a batch of comments by their id, use the following example:
+
+**Retrieve three comments using their base 36 id values**
+
+https://api.pushshift.io/reddit/comment/search?ids=dlrezc8,dlrawgw,dlrhbkq
+
+
 ## Using the subreddit parameter
 
 There are quite a few parameters to review, so let's start by providing some more complex examples and how to use the parameters above.  Let's continue with the previous example above and expand on our "science" keyword search.  What if we wanted to search for the term "science" but restrict it to a specific subreddit?  By using the subreddit parameter, we can do that:
