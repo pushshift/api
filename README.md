@@ -319,7 +319,23 @@ This call will return a data key with an array of comment ids.  You can then ret
 
 https://api.pushshift.io/reddit/submission/comment_ids/6uey5x
 
-# To be continued ...
+
+----------------------
+# List of Endpoints
+
+| Endpoint | Description | Status | 
+| ------ | ------ | ------- |
+| /reddit/search/comment/ | Search Reddit Comments | Active
+| /reddit/search/submission/ | Search Reddit Submissions | Active
+| /reddit/submission/comment_ids/{base36-submission-id} | Retrieve comment ids for a submission object | Active
+| /reddit/analyze/user/{author-name} | Analyze a Reddit user's activity | In Development
+| /reddit/term/frequency/{term} | Analyze a term based on activity |  In Development
+| /reddit/search/all/ | Search Both Comment and Submissions | In Development
+| /reddit/trending/people | Find out who is trending on Reddit | In Development
+| /reddit/search/links | Find relevent links being shared on Reddit | In Development
+
+
+# To be continued (Currently under active development) ...
 
 
 
