@@ -36,7 +36,7 @@ There are numerous additional parameters that can be used when performing a comm
 | Parameter | Description | Default | Accepted Values | 
 | ------ | ------ | ------- | ------ |
 | q | Search term. | N/A | String / Quoted String for phrases |
-| size | Number of results to return | 25 | Integer < 500
+| size | Number of results to return | 25 | Integer <= 500
 | fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
 | sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
@@ -274,8 +274,10 @@ There are numerous additional parameters that can be used when performing a subm
 
 | Parameter | Description | Default | Accepted Values | 
 | ------ | ------ | ------- | ------ |
-| q | Search term. | N/A | String / Quoted String for phrases |
-| size | Number of results to return | 25 | Integer < 500
+| q | Search term. Will search ALL possible fields | N/A | String / Quoted String for phrases |
+| title | Searches the title field only | N/A | String / Quoted String for phrases |
+| selftext | Searches the selftext field only | N/A | String / Quoted String for phrases |
+| size | Number of results to return | 25 | Integer <= 500 |
 | fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
 | sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
