@@ -6,32 +6,28 @@ from Helpers import *
 
 
 class Analyze:
-    def on_get(self, req, resp):
+    def on_get(self, req, resp, author):
         start = time.time()
         params = req.params
         searchURL = 'http://mars:9200/rc/comments/_search'
         nested_dict = lambda: defaultdict(nested_dict)
         q = nested_dict()
-        size = 25
+        size = 2500
         sort_direction = 'desc'
         q['query']['bool']['filter'] = []
+        q['size'] = size
 
-        if 'limit' in params:
-            params['size'] = params['limit']
-
-        if 'size' in params and params['size'] is not None and LooksLikeInt(params['size']):
-            size = 500 if int(params['size']) > 500 else int(params['size'])
-            q['size'] = size
-        else:
-            q['size'] = 25
-
-        if 'author' in params and params['author'] is not None:
+        if author is not None:
             terms = nested_dict()
-            terms['terms']['author'] =  [params['author'].lower()]
+            terms['terms']['author'] =  [author.lower()]
             q['query']['bool']['filter'].append(terms)
 
         q['size'] = size
-        q['sort']['score'] = sort_direction
+        q['sort']['created_utc'] = sort_direction
+
+        q['aggs']['created_utc']['date_histogram']['field'] = 'created_utc'
+        q['aggs']['created_utc']['date_histogram']['interval'] = "day"
+        q['aggs']['created_utc']['date_histogram']['order']['_key'] = 'asc'
 
         q['aggs']['subreddit']['terms']['field'] = 'subreddit.keyword'
         q['aggs']['subreddit']['terms']['size'] = size
