@@ -34,3 +34,6 @@ class pgdb:
                     self.connect()
                 except:
                     raise
+
+pgdb = pgdb()
+

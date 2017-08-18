@@ -1,6 +1,7 @@
 from collections import defaultdict
 import requests
 import json
+import DBFunctions
 
 def LooksLikeInt(s):
     try:
@@ -55,7 +56,7 @@ def getSubmissionsFromPg(ids):
     if not isinstance(ids, (list, tuple)):
         ids = [ids]
     ids_to_get_from_db = []
-    rows = pgdb.execute("SELECT * FROM submission WHERE (json->>'id')::int IN %s LIMIT 5000",tuple(ids))
+    rows = DBFunctions.pgdb.execute("SELECT * FROM submission WHERE (json->>'id')::int IN %s LIMIT 5000",tuple(ids))
     results = {}
     data = {}
     if rows:

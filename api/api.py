@@ -77,7 +77,7 @@ class getCommentsForSubmission:
         if submission_id[:3] == 't3_':
             submission_id = submission_id[3:]
         submission_id = base36decode(submission_id)
-        rows = pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
+        rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
         results = []
         data = {}
         if rows:
@@ -96,7 +96,6 @@ config = ConfigParser()
 config.read ('credentials.ini')
 DB_PASSWORD = config.get('database','password')
 DB_USER = config.get('database','user')
-pgdb = DBFunctions.pgdb()
 r = redis.StrictRedis(host='localhost', port=6379, db=1)
 api = falcon.API()
 api.add_route('/reddit/search', Comment.search())
