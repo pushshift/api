@@ -185,3 +185,21 @@ class search:
         return results
 
 
+class getCommentIDs:
+
+    def on_get(self, req, resp, submission_id):
+        submission_id = submission_id.lower()
+        if submission_id[:3] == 't3_':
+            submission_id = submission_id[3:]
+        submission_id = base36decode(submission_id)
+        rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
+        results = []
+        data = {}
+        if rows:
+            for row in rows:
+                comment_id = row[0]
+                results.append(base36encode(comment_id))
+        data['data'] = results;
+        resp.cache_control = ["public","max-age=5","s-maxage=5"]
+        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+

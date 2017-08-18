@@ -70,24 +70,6 @@ class AnalyzeUser:
         resp.cache_control = ['public','max-age=2','s-maxage=2']
         resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
 
-class getCommentsForSubmission:
-
-    def on_get(self, req, resp, submission_id):
-        submission_id = submission_id.lower()
-        if submission_id[:3] == 't3_':
-            submission_id = submission_id[3:]
-        submission_id = base36decode(submission_id)
-        rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
-        results = []
-        data = {}
-        if rows:
-            for row in rows:
-                comment_id = row[0]
-                results.append(base36encode(comment_id))
-        data['data'] = results;
-        resp.cache_control = ["public","max-age=5","s-maxage=5"]
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
-
 def database_connection():
     connection = psycopg2.connect("dbname='reddit' user='" + DB_USER + "' host='jupiter' password='" + DB_PASSWORD + "'")
     return connection
@@ -104,4 +86,5 @@ api.add_route('/reddit/search/comment', Comment.search())
 api.add_route('/reddit/search/submission', Submission.search())
 api.add_route('/reddit/submission/search', Submission.search())
 api.add_route('/reddit/analyze/user', AnalyzeUser())
-api.add_route('/get/comment_ids/{submission_id}', getCommentsForSubmission())
+api.add_route('/get/comment_ids/{submission_id}', Submission.getCommentIDs())
+api.add_route('/reddit/submission/comment_ids/{submission_id}', Submission.getCommentIDs())
