@@ -284,6 +284,7 @@ There are numerous additional parameters that can be used when performing a subm
 
 | Parameter | Description | Default | Accepted Values | 
 | ------ | ------ | ------- | ------ |
+| ids | Get specific submissions via their ids | N/A | Comma-delimited base36 ids |
 | q | Search term. Will search ALL possible fields | N/A | String / Quoted String for phrases |
 | q:not | Exclude search term.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | title | Searches the title field only | N/A | String / Quoted String for phrases |
