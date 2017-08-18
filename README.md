@@ -309,7 +309,15 @@ There are numerous additional parameters that can be used when performing a subm
 | contest_mode | Exclude or include content mode submissions | both allowed | "true" or "false" | 
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" | 
 
+## Get all comment ids for a particular submission
 
+This call is very helpful when used along with Reddit's API. When there are large submissions with thousands of comments, it is often difficult to get all the comment ids for a submission.  This call will return an array of comment ids when a submission id is passed to it.  The endpoint is: https://api.pushshift.io/reddit/submission/comment_ids/{base36 submission id}
+
+This call will return a data key with an array of comment ids.  You can then retrieve the actual comment information from this API or the Reddit API.  If the submission is fairly new, it is better to use the Reddit API to get the most current score for the comments.
+
+**Retrieve all comment ids for a submission object**
+
+https://api.pushshift.io/reddit/submission/comment_ids/6uey5x
 
 # To be continued ...
 
