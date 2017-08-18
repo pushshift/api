@@ -275,8 +275,11 @@ There are numerous additional parameters that can be used when performing a subm
 | Parameter | Description | Default | Accepted Values | 
 | ------ | ------ | ------- | ------ |
 | q | Search term. Will search ALL possible fields | N/A | String / Quoted String for phrases |
+| q:not | Exclude search term.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | title | Searches the title field only | N/A | String / Quoted String for phrases |
+| title:not | Exclude search term from title.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | selftext | Searches the selftext field only | N/A | String / Quoted String for phrases |
+| selftext:not | Exclude search term from selftext.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | size | Number of results to return | 25 | Integer <= 500 |
 | fields | One return specific fields (comma delimited) | All Fields | String or comma-delimited string (Multiple values allowed) |
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
