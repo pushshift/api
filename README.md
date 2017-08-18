@@ -244,6 +244,35 @@ Using the aggs parameter, you can combine multiple aggregations and get a lot of
 **Show aggregations for authors, submissions, subreddits and time frequency for the term "Trump" over the past 24 hours**
 https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author,link_id,subreddit,created_utc&frequency=hour&size=0
 
+-------------------------
+
+# Searching Submissions
+
+To search for submissions, use the endpoint https://api.pushshift.io/reddit/search/submission/ endpoint.  Let's start with a few examples and then go over the various parameters available when using this endpoint.  Do to a simple search, the q parameter is used to search for a specific word or phrase.  Here is an example:
+
+**Search for the most recent submissions mentioning the word "science"**
+https://api.pushshift.io/reddit/search/submission/?q=science
+
+This will search for the most recent submissions with the word science in the title or selftext.  The search is not case-sensitive, so it will find any occurence of science regardless of capitalization.  The API defaults to sorting by the most recently made submissions first.  After running this search, 25 results are returned.  This is the default size for searches and can be changed by using the size parameter.  This will be discussed in further detail in the paramaters section.  Data is returned in JSON format and results are included in the "data" key. 
+
+# Search parameters for submissions
+
+There are numerous additional parameters that can be used when performing a submission search.  Let's go over each of them now and provide examples for each one.
+
+| Parameter | Description | Default | Accepted Values | 
+| ------ | ------ | ------- | ------ |
+| q | Search term. | N/A | String / Quoted String for phrases |
+| size | Number of results to return | 25 | Integer < 500
+| fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
+| sort | Sort results in a specific order | "desc" | "asc", "desc"
+| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
+| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
+| author | Restrict to a specific author | N/A | String
+| subreddit | Restrict to a specific subreddit | N/A | String
+| after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
+| before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
+| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
+
 
 
 # To be continued ...
