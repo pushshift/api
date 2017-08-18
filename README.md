@@ -32,19 +32,19 @@ This will search for the most recent comments with the word science in the body 
 
 There are numerous additional parameters that can be used when performing a comment search.  Let's go over each of them now and provide examples for each one.
 
-| Parameter | Description | Default |
-| ------ | ------ | ------- |
-| q | Search term. | N/A |
-| size | Number of results to return | 25 |
-| fields | One return specific fields (comma delimited) | All Fields Returned
-| sort | Return results "asc" or "desc" | "desc" |
-| sort_type | Sort by a specific attribute | "created_utc" |
-| aggs | Return aggregation data (author, link_id, created_utc, subreddit) | N/A | 
-| author | Restrict to a specific author | N/A |
-| subreddit | Restrict to a specific subreddit | N/A | 
-| after | Return results after this date | N/A |
-| before | Return results before this date | N/A | 
-| frequency | Used with the aggs parameter (second, minute, hour, day -- See below) | N/A |
+| Parameter | Description | Default | Accepted Values | 
+| ------ | ------ | ------- | ------ |
+| q | Search term. | N/A | String / Quoted String for phrases |
+| size | Number of results to return | 25 | Integer < 500
+| fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
+| sort | Sort results in a specific order | "desc" | "asc", "desc"
+| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
+| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
+| author | Restrict to a specific author | N/A | String
+| subreddit | Restrict to a specific subreddit | N/A | String
+| after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
+| before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
+| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
 
 ## Using the subreddit parameter
 
