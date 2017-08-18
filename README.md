@@ -36,6 +36,7 @@ There are numerous additional parameters that can be used when performing a comm
 | Parameter | Description | Default | Accepted Values | 
 | ------ | ------ | ------- | ------ |
 | q | Search term. | N/A | String / Quoted String for phrases |
+| ids | Get specific comments via their ids | N/A | Comma-delimited base36 ids |
 | size | Number of results to return | 25 | Integer <= 500
 | fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
