@@ -70,10 +70,6 @@ class AnalyzeUser:
         resp.cache_control = ['public','max-age=2','s-maxage=2']
         resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
 
-config = ConfigParser()
-config.read ('credentials.ini')
-DB_PASSWORD = config.get('database','password')
-DB_USER = config.get('database','user')
 r = redis.StrictRedis(host='localhost', port=6379, db=1)
 api = falcon.API()
 api.add_route('/reddit/search', Comment.search())
