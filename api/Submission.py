@@ -8,9 +8,20 @@ from Helpers import *
 class search:
     params = None
     def on_get(self, req, resp):
-        start = time.time()
+        self.start = time.time()
         q = req.get_param('q');
         self.params = req.params
+
+        if 'ids' in self.params:
+            data = self.getIds(self.params['ids'])
+            end = time.time()
+            data["metadata"] = {}
+            data["metadata"]["execution_time_milliseconds"] = round((end - self.start) * 1000,2)
+            data["metadata"]["version"] = "v3.0"
+            resp.cache_control = ["public","max-age=2","s-maxage=2"]
+            resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+            return
+
         response = self.search("http://mars:9200/rs/submissions/_search");
         results = []
         data = {}
@@ -93,7 +104,7 @@ class search:
         data['metadata'] = {}
         data['metadata'] = response['metadata']
         data['metadata'] = self.params
-        data['metadata']['execution_time_milliseconds'] = round((end - start) * 1000,2)
+        data['metadata']['execution_time_milliseconds'] = round((end - self.start) * 1000,2)
         data['metadata']['version'] = 'v3.0'
         data['metadata']['results_returned'] = len(response['data']['hits']['hits'])
         data['metadata']['timed_out'] = response['data']['timed_out']
@@ -183,6 +194,41 @@ class search:
         results['metadata']['sort_type'] = self.params['sort_type']
         return results
 
+    def getIds(self, ids):
+        nested_dict = lambda: defaultdict(nested_dict)
+        if not isinstance(ids, (list, tuple)):
+            ids = [ids]
+        ids_to_fetch = []
+        for id in ids:
+            id = id.lower()
+            if id[:3] == "t3_":
+                id = id[3:]
+            ids_to_fetch.append(base36decode(id))
+        q = nested_dict()
+        q["query"]["terms"]["id"] = ids_to_fetch
+        q["size"] = 500
+        response = requests.get("http://mars:9200/rs/submissions/_search", data=json.dumps(q))
+        s = json.loads(response.text)
+        results = []
+        for hit in s["hits"]["hits"]:
+            source = hit["_source"]
+            base_10_id = source["id"]
+            source["id"] = base36encode(int(hit["_id"]))
+            if 'subreddit_id' in source:
+                source['subreddit_id'] = "t5_" + base36encode(source['subreddit_id'])
+            source["full_link"] = "https://www.reddit.com" + source["permalink"]
+            if 'fields' in self.params:
+                if isinstance(self.params['fields'], str):
+                    self.params['fields'] = [self.params['fields']]
+                self.params['fields'] = [x.lower() for x in self.params['fields']]
+                for key in list(source):
+                    if key.lower() not in self.params['fields']:
+                        source.pop(key, None)
+            results.append(source)
+        data = {}
+        data["data"] = results
+        data["metadata"] = {}
+        return data
 
 class getCommentIDs:
 
