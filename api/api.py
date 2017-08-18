@@ -70,10 +70,6 @@ class AnalyzeUser:
         resp.cache_control = ['public','max-age=2','s-maxage=2']
         resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
 
-def database_connection():
-    connection = psycopg2.connect("dbname='reddit' user='" + DB_USER + "' host='jupiter' password='" + DB_PASSWORD + "'")
-    return connection
-
 config = ConfigParser()
 config.read ('credentials.ini')
 DB_PASSWORD = config.get('database','password')
