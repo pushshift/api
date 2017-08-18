@@ -288,6 +288,12 @@ There are numerous additional parameters that can be used when performing a subm
 | before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days) |
 | score | Restrict results based on score | N/A | Integer or > x or < x (i.e. score=>100 or score=<25) |
 | num_comments | Restrict results based on number of comments | N/A | Integer or > x or < x (i.e. num_comments=>100) |
+| over_18 | Restrict to nsfw or sfw content | both allowed | "true" or "false" |
+| is_video | Restrict to video content | both allowed | "true" or "false" |
+| locked | Return locked or unlocked threads only | both allowed | "true" or "false" |
+| stickied | Return stickied or unstickied content only | both allowed | "true" or "false" |
+| spoiler | Exclude or include spoilers only | both allowed | "true" or "false" |
+| contest_mode | Exclude or include content mode submissions | both allowed | "true" or "false" | 
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" | 
 
 
