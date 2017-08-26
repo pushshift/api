@@ -19,6 +19,10 @@ def process(params,q):
             terms['terms'][condition] = params[condition]
             q['query']['bool']['filter'].append(terms)
 
+    if 'delta_only' in params and params['delta_only'] is not None:
+        if params['delta_only'].lower() == "true" or params['delta_only'] == "1":
+            params['delta_only'] = True
+
     if 'after' in params and params['after'] is not None:
         if LooksLikeInt(params['after']):
             params['after'] = int(params['after'])

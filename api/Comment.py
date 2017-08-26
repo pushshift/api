@@ -9,8 +9,11 @@ class search:
     params = None
     def on_get(self, req, resp):
         start = time.time()
-        q = req.get_param('q');
+        #q = req.get_param('q');
         self.params = req.params
+        nested_dict = lambda: defaultdict(nested_dict)
+        self.q = nested_dict()
+        self.params, self.q = Parameters.process(self.params,self.q)
         if 'ids' in self.params:
             data = self.getIds(self.params['ids'])
         else:
@@ -54,7 +57,10 @@ class search:
 
     def doElasticSearch(self):
 
-        response = self.search("http://mars:9200/rc/comments/_search")
+        self.params['index'] = "rc"
+        if 'delta_only' in self.params and self.params['delta_only'] is True:
+            self.params['index'] = "rc_delta"
+        response = self.search("http://mars:9200/" + self.params['index'] + "/comments/_search")
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
@@ -119,7 +125,7 @@ class search:
                 submission_data = getSubmissionsFromES(ids)
                 newlist = []
                 after = 0
-                if "after" in self.params:
+                if "after" in self.params and self.params['after'] is not None:
                     after = int(self.params["after"])
                 for item in response["data"]["aggregations"]["link_id"]["buckets"]:
                     if item["key"] in submission_data and submission_data[item["key"]]["created_utc"] > after:
@@ -140,17 +146,17 @@ class search:
 
     def search(self, uri):
         nested_dict = lambda: defaultdict(nested_dict)
-        q = nested_dict()
-        q['query']['bool']['filter'] = []
+        #q = nested_dict()
+        self.q['query']['bool']['filter'] = []
 
         if 'q' in self.params and self.params['q'] is not None:
             sqs = nested_dict()
             sqs['simple_query_string']['query'] = self.params['q']
             sqs['simple_query_string']['fields'] = ['body']
             sqs['simple_query_string']['default_operator'] = 'and'
-            q['query']['bool']['filter'].append(sqs)
+            self.q['query']['bool']['filter'].append(sqs)
 
-        self.params, q = Parameters.process(self.params,q)
+        #self.params, q = Parameters.process(self.params,q)
 
         min_doc_count = 0
         if 'min_doc_count' in self.params and self.params['min_doc_count'] is not None and LooksLikeInt(self.params['min_doc_count']):
@@ -186,13 +192,14 @@ class search:
 
         response = None
         try:
-            response = requests.get("http://mars:9200/rc/comments/_search", data=json.dumps(q))
+            response = requests.get(uri, data=json.dumps(self.q))
         except requests.exceptions.RequestException as e:
-            response = requests.get("http://jupiter:9200/rc/comments/_search", data=json.dumps(q))
+            response = requests.get("http://jupiter:9200/rc/comments/_search", data=json.dumps(self.q))
 
         results = {}
         results['data'] = json.loads(response.text)
         results['metadata'] = {}
+        results['metadata'] = self.params
         results['metadata']['size'] = self.params['size']
         results['metadata']['sort'] = self.params['sort']
         results['metadata']['sort_type'] = self.params['sort_type']
