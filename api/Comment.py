@@ -156,28 +156,28 @@ class search:
                 self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
-                    q['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
-                    q['aggs']['subreddit']['significant_terms']['size'] = 1000
-                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = "painless"
-                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = "params._subset_freq"
-                    q['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
+                    self.es['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
+                    self.es['aggs']['subreddit']['significant_terms']['size'] = 1000
+                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = "painless"
+                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = "params._subset_freq"
+                    self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'author':
-                    q['aggs']['author']['terms']['field'] = 'author.keyword'
-                    q['aggs']['author']['terms']['size'] = 1000
-                    q['aggs']['author']['terms']['order']['_count'] = 'desc'
+                    self.es['aggs']['author']['terms']['field'] = 'author.keyword'
+                    self.es['aggs']['author']['terms']['size'] = 1000
+                    self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'created_utc':
-                    q['aggs']['created_utc']['date_histogram']['field'] = "created_utc"
+                    self.es['aggs']['created_utc']['date_histogram']['field'] = "created_utc"
                     if self.pp['frequency'] is None:
                         self.pp['frequency'] = "day"
-                    q['aggs']['created_utc']['date_histogram']['interval'] = self.pp['frequency']
-                    q['aggs']['created_utc']['date_histogram']['order']['_key'] = "asc"
+                    self.es['aggs']['created_utc']['date_histogram']['interval'] = self.pp['frequency']
+                    self.es['aggs']['created_utc']['date_histogram']['order']['_key'] = "asc"
 
                 if agg.lower() == 'link_id':
-                    q['aggs']['link_id']['terms']['field'] = "link_id"
-                    q['aggs']['link_id']['terms']['size'] = 250
-                    q['aggs']['link_id']['terms']['order']['_count'] = "desc"
+                    self.es['aggs']['link_id']['terms']['field'] = "link_id"
+                    self.es['aggs']['link_id']['terms']['size'] = 250
+                    self.es['aggs']['link_id']['terms']['order']['_count'] = "desc"
 
         response = None
         try:

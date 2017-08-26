@@ -30,7 +30,7 @@ class PreProcessing(object):
 
         # Process Parameters
         req.context['processed_parameters'], req.context['es_query'] = Parameters.process(req.params)
-        print(req.context['es_query'])
+
 class CreateReply(object):
     def process_response(self, req, resp, resource, req_succeeded):
 
