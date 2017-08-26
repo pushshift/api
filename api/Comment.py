@@ -6,23 +6,16 @@ from Helpers import *
 import DBFunctions
 
 class search:
-    params = None
     def on_get(self, req, resp):
-        start = time.time()
-        #q = req.get_param('q');
-        self.params = req.params
-        nested_dict = lambda: defaultdict(nested_dict)
-        self.q = nested_dict()
-        self.params, self.q = Parameters.process(self.params,self.q)
-        if 'ids' in self.params:
-            data = self.getIds(self.params['ids'])
+        self.pp = req.context['processed_parameters']
+        self.es = req.context['es_query']
+
+        # Is this a request just for ids?
+        if 'ids' in self.pp:
+            data = self.getIds(self.pp['ids'])
         else:
             data = self.doElasticSearch()
-        end = time.time()
-        data["metadata"]["execution_time_milliseconds"] = round((end - start) * 1000,2)
-        data["metadata"]["version"] = "v3.0"
-        resp.cache_control = ["public","max-age=2","s-maxage=2"]
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+        resp.context["data"] = data
 
     def getIds(self,ids):
         if not isinstance(ids, (list, tuple)):
@@ -52,15 +45,15 @@ class search:
                 comment.pop('name', None)
                 results.append(comment)
         data["data"] = results
-        data["metadata"] = {}
+        #data["metadata"] = {}
         return data
 
     def doElasticSearch(self):
 
-        self.params['index'] = "rc"
-        if 'delta_only' in self.params and self.params['delta_only'] is True:
-            self.params['index'] = "rc_delta"
-        response = self.search("http://mars:9200/" + self.params['index'] + "/comments/_search")
+        self.pp['index'] = "rc"
+        if 'delta_only' in self.pp and self.pp['delta_only'] is True:
+            self.pp['index'] = "rc_delta"
+        response = self.search("http://mars:9200/" + self.pp['index'] + "/comments/_search")
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
@@ -85,12 +78,12 @@ class search:
             else:
                 source["author_flair_css_class"] = None
 
-            if 'fields' in self.params:
-                if isinstance(self.params['fields'], str):
-                    self.params['fields'] = [self.params['fields']]
-                self.params['fields'] = [x.lower() for x in self.params['fields']]
+            if 'fields' in self.pp:
+                if isinstance(self.pp['fields'], str):
+                    self.pp['fields'] = [self.pp['fields']]
+                self.pp['fields'] = [x.lower() for x in self.pp['fields']]
                 for key in list(source):
-                    if key.lower() not in self.params['fields']:
+                    if key.lower() not in self.pp['fields']:
                         source.pop(key, None)
 
             results.append(source)
@@ -125,8 +118,8 @@ class search:
                 submission_data = getSubmissionsFromES(ids)
                 newlist = []
                 after = 0
-                if "after" in self.params and self.params['after'] is not None:
-                    after = int(self.params["after"])
+                if "after" in self.pp and self.pp['after'] is not None:
+                    after = int(self.pp["after"])
                 for item in response["data"]["aggregations"]["link_id"]["buckets"]:
                     if item["key"] in submission_data and submission_data[item["key"]]["created_utc"] > after:
                         item["data"] = submission_data[item["key"]]
@@ -146,26 +139,22 @@ class search:
 
     def search(self, uri):
         nested_dict = lambda: defaultdict(nested_dict)
-        #q = nested_dict()
-        self.q['query']['bool']['filter'] = []
 
-        if 'q' in self.params and self.params['q'] is not None:
+        if 'q' in self.pp and self.pp['q'] is not None:
             sqs = nested_dict()
-            sqs['simple_query_string']['query'] = self.params['q']
+            sqs['simple_query_string']['query'] = self.pp['q']
             sqs['simple_query_string']['fields'] = ['body']
             sqs['simple_query_string']['default_operator'] = 'and'
-            self.q['query']['bool']['filter'].append(sqs)
-
-        #self.params, q = Parameters.process(self.params,q)
+            self.es['query']['bool']['filter'].append(sqs)
 
         min_doc_count = 0
-        if 'min_doc_count' in self.params and self.params['min_doc_count'] is not None and LooksLikeInt(self.params['min_doc_count']):
-            min_doc_count = params['min_doc_count']
+        if 'min_doc_count' in self.pp and self.pp['min_doc_count'] is not None and LooksLikeInt(self.pp['min_doc_count']):
+            min_doc_count = self.pp['min_doc_count']
 
-        if 'aggs' in self.params:
-            if isinstance(self.params['aggs'], str):
-                self.params['aggs'] = [self.params['aggs']]
-            for agg in list(self.params['aggs']):
+        if 'aggs' in self.pp:
+            if isinstance(self.pp['aggs'], str):
+                self.pp['aggs'] = [self.pp['aggs']]
+            for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
                     q['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
                     q['aggs']['subreddit']['significant_terms']['size'] = 1000
@@ -180,9 +169,9 @@ class search:
 
                 if agg.lower() == 'created_utc':
                     q['aggs']['created_utc']['date_histogram']['field'] = "created_utc"
-                    if self.params['frequency'] is None:
-                        self.params['frequency'] = "day"
-                    q['aggs']['created_utc']['date_histogram']['interval'] = self.params['frequency']
+                    if self.pp['frequency'] is None:
+                        self.pp['frequency'] = "day"
+                    q['aggs']['created_utc']['date_histogram']['interval'] = self.pp['frequency']
                     q['aggs']['created_utc']['date_histogram']['order']['_key'] = "asc"
 
                 if agg.lower() == 'link_id':
@@ -192,19 +181,19 @@ class search:
 
         response = None
         try:
-            response = requests.get(uri, data=json.dumps(self.q))
+            response = requests.get(uri, data=json.dumps(self.es))
         except requests.exceptions.RequestException as e:
-            response = requests.get("http://jupiter:9200/rc/comments/_search", data=json.dumps(self.q))
+            response = requests.get("http://jupiter:9200/rc/comments/_search", data=json.dumps(self.es))
 
         results = {}
         results['data'] = json.loads(response.text)
         results['metadata'] = {}
-        results['metadata'] = self.params
-        results['metadata']['size'] = self.params['size']
-        results['metadata']['sort'] = self.params['sort']
-        results['metadata']['sort_type'] = self.params['sort_type']
-        if 'after' in self.params and self.params['after'] is not None:
-            results['metadata']['after'] = self.params['after']
+        results['metadata'] = self.pp
+        results['metadata']['size'] = self.pp['size']
+        results['metadata']['sort'] = self.pp['sort']
+        results['metadata']['sort_type'] = self.pp['sort_type']
+        if 'after' in self.pp and self.pp['after'] is not None:
+            results['metadata']['after'] = self.pp['after']
         return results
 
 

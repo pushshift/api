@@ -3,9 +3,13 @@ from Helpers import *
 import requests
 import json
 import time
+from pprint import pprint
 
-def process(params,q):
+def process(params):
     nested_dict = lambda: defaultdict(nested_dict)
+    q = nested_dict()
+    q['query']['bool']['filter'] = []
+    q['query']['bool']['must_not'] = []
     params = {k.lower(): v for k, v in params.items()} # Lowercase all parameter names passed
     suggested_sort = "desc";
 
