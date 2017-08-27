@@ -22,7 +22,7 @@ from configparser import ConfigParser
 
 API_VERSION = "3.0"
 
-class PreProcessing(object):
+class PreProcessing:
     def process_resource(self, req, resp, resource, params):
 
         # Record start time of request
@@ -31,26 +31,26 @@ class PreProcessing(object):
         # Process Parameters
         req.context['processed_parameters'], req.context['es_query'] = Parameters.process(req.params)
 
-class CreateReply(object):
+class CreateReply:
     def process_response(self, req, resp, resource, req_succeeded):
 
         # Set appropriate cache level for response
-        resp.cache_control = ["public","max-age=2","s-maxage=2"]
+        resp.cache_control = ['public','max-age=2','s-maxage=2']
 
         # Calculate total execution time for request
-        execution_time = time.time() - req.context["start_time"]
+        execution_time = time.time() - req.context['start_time']
 
         # Create Response and metadata
         if 'metadata' not in resp.context['data']:
-            resp.context["data"]["metadata"] = {}
-        resp.context["data"]["metadata"].update(req.params)
-        resp.context["data"]["metadata"]["execution_time_milliseconds"] = round((execution_time) * 1000,2)
-        resp.context["data"]["metadata"]["api_version"] = API_VERSION
-        resp.body = json.dumps(resp.context["data"],sort_keys=True,indent=4, separators=(',', ': '))
+            resp.context['data']['metadata'] = {}
+        resp.context['data']['metadata'].update(req.params)
+        resp.context['data']['metadata']['execution_time_milliseconds'] = round((execution_time) * 1000,2)
+        resp.context['data']['metadata']['api_version'] = API_VERSION
+        resp.body = json.dumps(resp.context['data'],sort_keys=True,indent=4, separators=(',', ': '))
 
 class Middleware(object):
     def process_request(self, req, resp):
-        print ("Process Request")
+        print ('Process Request')
         #req.context = {}
         #req.context['a'] = {}
         #req.context['a']['b'] = "hello"
@@ -83,7 +83,6 @@ class Middleware(object):
 
 
 api = falcon.API(middleware=[PreProcessing(),CreateReply()])
-#api = falcon.API()
 api.add_route('/reddit/search', Comment.search())
 api.add_route('/reddit/comment/search', Comment.search())
 api.add_route('/reddit/search/comment', Comment.search())

@@ -15,7 +15,7 @@ class search:
             data = self.getIds(self.pp['ids'])
         else:
             data = self.doElasticSearch()
-        resp.context["data"] = data
+        resp.context['data'] = data
 
     def getIds(self,ids):
         if not isinstance(ids, (list, tuple)):
@@ -23,7 +23,7 @@ class search:
         ids_to_get_from_db = []
         for id in ids:
             id = id.lower()
-            if id[:3] == "t1_":
+            if id[:3] == 't1_':
                 id = id[3:]
             ids_to_get_from_db.append(base36decode(id))
         rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'id')::bigint IN %s LIMIT 5000",tuple(ids_to_get_from_db))
@@ -44,8 +44,7 @@ class search:
                 comment['link_id'] = "t3_" + base36encode(comment['link_id'])
                 comment.pop('name', None)
                 results.append(comment)
-        data["data"] = results
-        #data["metadata"] = {}
+        data['data'] = results
         return data
 
     def doElasticSearch(self):
@@ -195,5 +194,3 @@ class search:
         if 'after' in self.pp and self.pp['after'] is not None:
             results['metadata']['after'] = self.pp['after']
         return results
-
-

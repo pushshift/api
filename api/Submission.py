@@ -6,20 +6,13 @@ from Helpers import *
 
 
 class search:
-    params = None
     def on_get(self, req, resp):
-        self.start = time.time()
-        q = req.get_param('q');
-        self.params = req.params
+        self.pp = req.context['processed_parameters']
+        self.es = req.context['es_query']
 
-        if 'ids' in self.params:
-            data = self.getIds(self.params['ids'])
-            end = time.time()
-            data["metadata"] = {}
-            data["metadata"]["execution_time_milliseconds"] = round((end - self.start) * 1000,2)
-            data["metadata"]["version"] = "v3.0"
-            resp.cache_control = ["public","max-age=2","s-maxage=2"]
-            resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+        if 'ids' in self.pp:
+            data = self.getIds(self.pp['ids'])
+            resp.context["data"] = data
             return
 
         response = self.search("http://mars:9200/rs/submissions/_search");
@@ -47,12 +40,12 @@ class search:
             if source["permalink"]:
                 source["full_link"] = "https://www.reddit.com" + source["permalink"]
 
-            if 'fields' in self.params:
-                if isinstance(self.params['fields'], str):
-                    self.params['fields'] = [self.params['fields']]
-                self.params['fields'] = [x.lower() for x in self.params['fields']]
+            if 'fields' in self.pp:
+                if isinstance(self.pp['fields'], str):
+                    self.pp['fields'] = [self.pp['fields']]
+                self.pp['fields'] = [x.lower() for x in self.pp['fields']]
                 for key in list(source):
-                    if key.lower() not in self.params['fields']:
+                    if key.lower() not in self.pp['fields']:
                         source.pop(key, None)
 
             results.append(source)
@@ -98,100 +91,91 @@ class search:
                 newlist = sorted(response['data']['aggregations']['time_of_day']['buckets'], key=lambda k: k['utc_hour'])
                 data['aggs']['time_of_day'] = newlist
 
-
-        end = time.time()
-        data['data'] = results;
+        data["data"] = results
         data['metadata'] = {}
         data['metadata'] = response['metadata']
-        data['metadata'] = self.params
-        data['metadata']['execution_time_milliseconds'] = round((end - self.start) * 1000,2)
-        data['metadata']['version'] = 'v3.0'
+        data['metadata'] = self.pp
         data['metadata']['results_returned'] = len(response['data']['hits']['hits'])
         data['metadata']['timed_out'] = response['data']['timed_out']
         data['metadata']['total_results'] = response['data']['hits']['total']
         data['metadata']['shards'] = {}
         data['metadata']['shards'] = response['data']['_shards']
-        resp.cache_control = ['public','max-age=2','s-maxage=2']
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+        resp.context['data'] = data
 
     def search(self, uri):
         nested_dict = lambda: defaultdict(nested_dict)
-        q = nested_dict()
-        q['query']['bool']['filter'] = []
-        q['query']['bool']['must_not'] = []
-        self.params, q = Parameters.process(self.params,q)
 
-        if 'q' in self.params and self.params['q'] is not None:
+        if 'q' in self.pp and self.pp['q'] is not None:
             sqs = nested_dict()
-            sqs['simple_query_string']['query'] = self.params['q']
+            sqs['simple_query_string']['query'] = self.pp['q']
             sqs['simple_query_string']['default_operator'] = 'and'
-            q['query']['bool']['filter'].append(sqs)
+            self.es['query']['bool']['filter'].append(sqs)
 
         conditions = ["title","selftext"]
         for condition in conditions:
-            if condition in self.params and self.params[condition] is not None:
+            if condition in self.pp and self.pp[condition] is not None:
                 sqs = nested_dict()
-                sqs['simple_query_string']['query'] = self.params[condition]
+                sqs['simple_query_string']['query'] = self.pp[condition]
                 sqs['simple_query_string']['fields'] = [condition]
                 sqs['simple_query_string']['default_operator'] = 'and'
-                q['query']['bool']['filter'].append(sqs)
+                self.es['query']['bool']['filter'].append(sqs)
 
         not_conditions = ["title:not", "q:not", "selftext:not"]
         for condition in not_conditions:
-            if condition in self.params and self.params[condition] is not None:
+            if condition in self.pp and self.pp[condition] is not None:
                 sqs = nested_dict()
-                sqs['simple_query_string']['query'] = self.params[condition]
+                sqs['simple_query_string']['query'] = self.pp[condition]
                 if condition != 'q:not':
                     sqs['simple_query_string']['fields'] = [condition.split(":")[0]]
                 sqs['simple_query_string']['default_operator'] = 'and'
-                q['query']['bool']['must_not'].append(sqs)
+                self.es['query']['bool']['must_not'].append(sqs)
 
         min_doc_count = 0
-        if 'min_doc_count' in self.params and self.params['min_doc_count'] is not None and LooksLikeInt(self.params['min_doc_count']):
-            min_doc_count = self.params['min_doc_count']
+        if 'min_doc_count' in self.pp and self.pp['min_doc_count'] is not None and LooksLikeInt(self.pp['min_doc_count']):
+            min_doc_count = self.pp['min_doc_count']
 
-        if 'aggs' in self.params:
-            if isinstance(self.params['aggs'], str):
-                self.params['aggs'] = [self.params['aggs']]
-            for agg in list(self.params['aggs']):
+        if 'aggs' in self.pp:
+            if isinstance(self.pp['aggs'], str):
+                self.pp['aggs'] = [self.pp['aggs']]
+            for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
-                    q['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
-                    q['aggs']['subreddit']['significant_terms']['size'] = 1000
-                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
-                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
-                    q['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
+                    self.es['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
+                    self.es['aggs']['subreddit']['significant_terms']['size'] = 1000
+                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
+                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
+                    self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'author':
-                    q['aggs']['author']['terms']['field'] = 'author.keyword'
-                    q['aggs']['author']['terms']['size'] = 1000
-                    q['aggs']['author']['terms']['order']['_count'] = 'desc'
-                    #q['aggs']['author']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
-                    #q['aggs']['author']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
-                    #q['aggs']['author']['significant_terms']['min_doc_count'] = min_doc_count
+                    self.es['aggs']['author']['terms']['field'] = 'author.keyword'
+                    self.es['aggs']['author']['terms']['size'] = 1000
+                    self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
+                    #self.es['aggs']['author']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
+                    #self.es['aggs']['author']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
+                    #self.es['aggs']['author']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'created_utc':
-                    q['aggs']['created_utc']['date_histogram']['field'] = 'created_utc'
-                    if self.params['frequency'] is None:
-                        self.params['frequency'] = "day"
-                    q['aggs']['created_utc']['date_histogram']['interval'] = self.params['frequency']
-                    q['aggs']['created_utc']['date_histogram']['order']['_key'] = 'asc'
+                    self.es['aggs']['created_utc']['date_histogram']['field'] = 'created_utc'
+                    if self.pp['frequency'] is None:
+                        self.pp['frequency'] = "day"
+                    self.es['aggs']['created_utc']['date_histogram']['interval'] = self.pp['frequency']
+                    self.es['aggs']['created_utc']['date_histogram']['order']['_key'] = 'asc'
 
                 if agg.lower() == 'domain':
-                    q['aggs']['domain']['terms']['field'] = 'domain.keyword'
-                    q['aggs']['domain']['terms']['size'] = 1000
-                    q['aggs']['domain']['terms']['order']['_count'] = 'desc'
+                    self.es['aggs']['domain']['terms']['field'] = 'domain.keyword'
+                    self.es['aggs']['domain']['terms']['size'] = 1000
+                    self.es['aggs']['domain']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'time_of_day':
-                    q['aggs']['time_of_day']['significant_terms']['field'] = 'hour'
-                    q['aggs']['time_of_day']['significant_terms']['size'] = 25
-                    q['aggs']['time_of_day']['significant_terms']['percentage']
+                    self.es['aggs']['time_of_day']['significant_terms']['field'] = 'hour'
+                    self.es['aggs']['time_of_day']['significant_terms']['size'] = 25
+                    self.es['aggs']['time_of_day']['significant_terms']['percentage']
 
-        response = requests.get(uri, data=json.dumps(q))
+        response = requests.get(uri, data=json.dumps(self.es))
         results = {}
         results['data'] = json.loads(response.text)
         results['metadata'] = {}
-        results['metadata']['sort'] = self.params['sort']
-        results['metadata']['sort_type'] = self.params['sort_type']
+        results['metadata']['sort'] = self.pp['sort']
+        results['metadata']['sort_type'] = self.pp['sort_type']
         return results
 
     def getIds(self, ids):
@@ -205,8 +189,8 @@ class search:
                 id = id[3:]
             ids_to_fetch.append(base36decode(id))
         q = nested_dict()
-        q["query"]["terms"]["id"] = ids_to_fetch
-        q["size"] = 500
+        self.es["query"]["terms"]["id"] = ids_to_fetch
+        self.es["size"] = 500
         response = requests.get("http://mars:9200/rs/submissions/_search", data=json.dumps(q))
         s = json.loads(response.text)
         results = []
@@ -217,12 +201,12 @@ class search:
             if 'subreddit_id' in source:
                 source['subreddit_id'] = "t5_" + base36encode(source['subreddit_id'])
             source["full_link"] = "https://www.reddit.com" + source["permalink"]
-            if 'fields' in self.params:
-                if isinstance(self.params['fields'], str):
-                    self.params['fields'] = [self.params['fields']]
-                self.params['fields'] = [x.lower() for x in self.params['fields']]
+            if 'fields' in self.pp:
+                if isinstance(self.pp['fields'], str):
+                    self.pp['fields'] = [self.pp['fields']]
+                self.pp['fields'] = [x.lower() for x in self.pp['fields']]
                 for key in list(source):
-                    if key.lower() not in self.params['fields']:
+                    if key.lower() not in self.pp['fields']:
                         source.pop(key, None)
             results.append(source)
         data = {}
@@ -247,4 +231,3 @@ class getCommentIDs:
         data['data'] = results;
         resp.cache_control = ["public","max-age=5","s-maxage=5"]
         resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
-
