@@ -168,7 +168,7 @@ class search:
 
                 if agg.lower() == 'created_utc':
                     self.es['aggs']['created_utc']['date_histogram']['field'] = "created_utc"
-                    if self.pp['frequency'] is None:
+                    if 'frequency' not in self.pp or self.pp['frequency'] is None:
                         self.pp['frequency'] = "day"
                     self.es['aggs']['created_utc']['date_histogram']['interval'] = self.pp['frequency']
                     self.es['aggs']['created_utc']['date_histogram']['order']['_key'] = "asc"

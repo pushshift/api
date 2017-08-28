@@ -116,10 +116,15 @@ def process(params):
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
 
-    if 'frequency' in params and params['frequency'].lower() in ['second','minute','hour','day','week','month']:
-        params['frequency'] = params['frequency'].lower()
-    else:
-        params['frequency'] = None
-
+    if 'frequency' in params and params['frequency'] is not None:
+        if params['frequency'][-1:] in ['s','m','h','d','w','M','y'] and LooksLikeInt(params['frequency'][:1]):
+            time_unit = params['frequency'][-1:]
+            time_period = {'s':'second','m':'minute','h':'hour','d':'day','w':'week','M':'month','y':'year'}
+            length = params['frequency'][:-1]
+            params['frequency'] = str(length) + time_unit
+        elif 'frequency' in params and params['frequency'].lower() in ['second','minute','hour','day','week','month','year']:
+            params['frequency'] = params['frequency'].lower()
+        else:
+            params['frequency'] = None
     return(params,q)
 
