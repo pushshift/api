@@ -68,7 +68,7 @@ class search:
             if id[:3] == 't1_':
                 id = id[3:]
             ids_to_get_from_db.append(base36decode(id))
-        rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'id')::bigint IN %s LIMIT 5000",tuple(ids_to_get_from_db))
+        rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'id')::bigint IN (%s) LIMIT 5000", tuple(ids_to_get_from_db))
         results = []
         data = {}
         if rows:
