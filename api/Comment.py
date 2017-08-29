@@ -67,8 +67,10 @@ class search:
             id = id.lower()
             if id[:3] == 't1_':
                 id = id[3:]
-            ids_to_get_from_db.append(base36decode(id))
-        rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'id')::bigint IN (%s) LIMIT 5000", tuple(ids_to_get_from_db))
+            # Having issues with binding and IN statements -- need to resolve.  This will prevent SQL injection for the time being
+            bigint = int(base36decode(id))
+            ids_to_get_from_db.append(bigint)
+        rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'id')::bigint IN (" + ','.join(map(str, ids_to_get_from_db)) + ") LIMIT 5000",())
         results = []
         data = {}
         if rows:
