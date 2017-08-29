@@ -20,11 +20,25 @@ class search:
         resp.context['data'] = data
 
     def getMostRecent(self,resp):
+
         # This will need to be optimized eventually to seperate searches with q parameter vs. one without it
         if self.pp['size'] >= 500:
             self.pp['size'] = 500
-            resp.context['cache_time'] = 5
-        rows = DBFunctions.pgdb.execute("SELECT * FROM comment ORDER BY (json->>'id')::bigint DESC LIMIT %s",self.pp['size'])
+            resp.context['cache_time'] = 6
+        rows = []
+
+        # There is a much better method for doing this but this will suffice for the time being
+        if self.pp['after'] == None:
+            self.pp['after'] = 0
+        if self.pp['before'] == None:
+            self.pp['before'] = 9999999999999
+        if not 'subreddit' in self.pp or self.pp['subreddit'] is None:
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['size']) ))
+        elif 'subreddit' in self.pp and self.pp['subbreddit'] is not None:
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s AND lower(json->>'subreddit') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['subreddit'], self.pp['size']) ))
+        elif 'author' in self.pp and self.pp['suthor'] is not None:
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s AND lower(json->>'author') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['author'], self.pp['size']) ))
+
         results = []
         data = {}
         if rows:

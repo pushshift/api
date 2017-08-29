@@ -22,7 +22,10 @@ class pgdb:
             retries -= 1
             try:
                 cur = self.db.cursor()
-                cur.execute(sql,(params,))
+                if isinstance(params, tuple):
+                    cur.execute(sql,params)
+                else:
+                    cur.execute(sql,[params])
                 rows = cur.fetchall()
                 cur.close()
                 return rows

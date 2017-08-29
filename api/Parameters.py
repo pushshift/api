@@ -112,6 +112,8 @@ def process(params):
 
     if 'sort' in params and params['sort'] is not None:
         params['sort'] = params['sort'].lower()
+        if params['sort'] != "asc" and params['sort'] != "desc":
+            params['sort'] = suggested_sort
     else:
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
