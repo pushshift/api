@@ -10,12 +10,39 @@ class search:
         self.pp = req.context['processed_parameters']
         self.es = req.context['es_query']
 
-        # Is this a request just for ids?
+        # What kind of request is this?
         if 'ids' in self.pp:
             data = self.getIds(self.pp['ids'])
+        elif ('q' not in self.pp or self.pp['q'] is None) and ('subreddit' not in self.pp and 'author' not in self.pp):
+            data = self.getMostRecent()
         else:
             data = self.doElasticSearch()
         resp.context['data'] = data
+
+    def getMostRecent(self):
+        # This will need to be optimized eventually to seperate searches with q parameter vs. one without it
+        if self.pp['size'] > 250:
+            self.pp['size'] = 250
+        rows = DBFunctions.pgdb.execute("SELECT * FROM comment ORDER BY (json->>'id')::bigint DESC LIMIT %s",self.pp['size'])
+        results = []
+        data = {}
+        if rows:
+            for row in rows:
+                comment = row[0]
+                comment['id'] = base36encode(comment['id'])
+                if 'parent_id' not in comment or comment['parent_id'] == None:
+                    comment['parent_id'] = "t3_" + base36encode(comment['link_id'])
+                elif comment['parent_id'] == comment['link_id']:
+                    comment['parent_id'] = "t3_" + base36encode(comment['link_id'])
+                else:
+                    comment['parent_id'] = "t1_" + base36encode(comment['parent_id'])
+                if 'subreddit_id' in comment:
+                    comment['subreddit_id'] = "t5_" + base36encode(comment['subreddit_id'])
+                comment['link_id'] = "t3_" + base36encode(comment['link_id'])
+                comment.pop('name', None)
+                results.append(comment)
+        data['data'] = results
+        return data
 
     def getIds(self,ids):
         if not isinstance(ids, (list, tuple)):

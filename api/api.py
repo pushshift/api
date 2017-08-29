@@ -43,7 +43,7 @@ class CreateReply:
         # Create Response and metadata
         if 'metadata' not in resp.context['data']:
             resp.context['data']['metadata'] = {}
-        resp.context['data']['metadata'].update(req.params)
+        resp.context['data']['metadata'].update(req.context['processed_parameters'])
         resp.context['data']['metadata']['execution_time_milliseconds'] = round((execution_time) * 1000,2)
         resp.context['data']['metadata']['api_version'] = API_VERSION
         resp.body = json.dumps(resp.context['data'],sort_keys=True,indent=4, separators=(',', ': '))
@@ -80,7 +80,6 @@ class Middleware(object):
         #resp.body = json.dumps("{'data':'stuff'}",sort_keys=True,indent=4, separators=(',', ': '))
         #print(resp.body)
         pass
-
 
 api = falcon.API(middleware=[PreProcessing(),CreateReply()])
 api.add_route('/reddit/search', Comment.search())
