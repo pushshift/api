@@ -77,8 +77,15 @@ class search:
     def doElasticSearch(self):
 
         self.pp['index'] = "rc"
+
+        # Only search the current comment index if after is set and within a month of current time
+        if 'after' in self.pp and self.pp['after'] is not None:
+            if self.pp['after'] > (time.time() - 2592000):
+                self.pp['index'] = "rc_delta"
         if 'delta_only' in self.pp and self.pp['delta_only'] is True:
             self.pp['index'] = "rc_delta"
+        # ----
+
         response = self.search("http://mars:9200/" + self.pp['index'] + "/comments/_search")
         results = []
         data = {}
