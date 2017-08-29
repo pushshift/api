@@ -14,15 +14,16 @@ class search:
         if 'ids' in self.pp:
             data = self.getIds(self.pp['ids'])
         elif ('q' not in self.pp or self.pp['q'] is None) and ('subreddit' not in self.pp and 'author' not in self.pp):
-            data = self.getMostRecent()
+            data = self.getMostRecent(resp)
         else:
             data = self.doElasticSearch()
         resp.context['data'] = data
 
-    def getMostRecent(self):
+    def getMostRecent(self,resp):
         # This will need to be optimized eventually to seperate searches with q parameter vs. one without it
-        if self.pp['size'] > 250:
-            self.pp['size'] = 250
+        if self.pp['size'] >= 500:
+            self.pp['size'] = 500
+            resp.context['cache_time'] = 5
         rows = DBFunctions.pgdb.execute("SELECT * FROM comment ORDER BY (json->>'id')::bigint DESC LIMIT %s",self.pp['size'])
         results = []
         data = {}
