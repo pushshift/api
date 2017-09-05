@@ -8,7 +8,8 @@ from pprint import pprint
 def process(params):
     nested_dict = lambda: defaultdict(nested_dict)
     q = nested_dict()
-    q['query']['bool']['filter'] = []
+    q['query']['bool']['filter']['bool']['must'] = []
+    q['query']['bool']['filter']['bool']['should'] = []
     q['query']['bool']['must_not'] = []
     params = {k.lower(): v for k, v in params.items()} # Lowercase all parameter names passed
     suggested_sort = "desc";
@@ -16,12 +17,18 @@ def process(params):
     conditions = ["subreddit","author"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
-            terms = nested_dict()
             if not isinstance(params[condition], (list, tuple)):
                 params[condition] = [params[condition]]
-            params[condition] = [x.lower() for x in params[condition]]
-            terms['terms'][condition] = params[condition]
-            q['query']['bool']['filter'].append(terms)
+            param_values = [x.lower() for x in params[condition]]
+            print (param_values)
+            for value in param_values:
+                terms = nested_dict()
+                if value[0] == "!":
+                    terms['term'][condition] = value[1:]
+                    q['query']['bool']['must_not'].append(terms)
+                else:
+                    terms['term'][condition] = value
+                    q['query']['bool']['filter']['bool']['should'].append(terms)
 
     if 'delta_only' in params and params['delta_only'] is not None:
         if params['delta_only'].lower() == "true" or params['delta_only'] == "1":
@@ -40,7 +47,7 @@ def process(params):
             params['after'] = int(time.time()) - (int(params['after'][:-1]))
         range = nested_dict()
         range['range']['created_utc']['gt'] = params['after']
-        q['query']['bool']['filter'].append(range)
+        q['query']['bool']['filter']['bool']['must'].append(range)
         suggested_sort = "asc"
     else:
         params['after'] = None
@@ -58,7 +65,7 @@ def process(params):
             params['before'] = int(time.time()) - (int(params['before'][:-1]))
         range = nested_dict()
         range['range']['created_utc']['lt'] = params['before']
-        q['query']['bool']['filter'].append(range)
+        q['query']['bool']['filter']['bool']['must'].append(range)
     else:
         params['before'] = None
 
@@ -70,7 +77,7 @@ def process(params):
             range['range']['score']['gt'] = int(params['score'][1:])
         elif LooksLikeInt(params['score']):
             range['term']['score'] = int(params['score'])
-        q['query']['bool']['filter'].append(range)
+        q['query']['bool']['filter']['bool']['must'].append(range)
 
     if 'num_comments' in params and params['num_comments'] is not None:
         range = nested_dict()
@@ -80,7 +87,7 @@ def process(params):
             range['range']['num_comments']['gt'] = int(params['num_comments'][1:])
         elif LooksLikeInt(params['num_comments']):
             range['term']['num_comments'] = int(params['num_comments'])
-        q['query']['bool']['filter'].append(range)
+        q['query']['bool']['filter']['bool']['must'].append(range)
 
     conditions = ["over_18","is_video","stickied","spoiler","locked","contest_mode"]
     for condition in conditions:
@@ -88,10 +95,9 @@ def process(params):
             parameter = nested_dict()
             if params[condition].lower() == 'true' or params[condition] == "1":
                 parameter['term'][condition] = "true" 
-                print ("Got here")
             elif params[condition].lower() == 'false' or params[condition] == "0":
                 parameter['term'][condition] = "false"
-            q['query']['bool']['filter'].append(parameter)
+            q['query']['bool']['filter']['bool']['must'].append(parameter)
 
     if 'sort_type' in params and params['sort_type'] is not None:
         params["sort_type"] = params['sort_type'].lower()

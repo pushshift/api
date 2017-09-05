@@ -109,7 +109,7 @@ class search:
             sqs = nested_dict()
             sqs['simple_query_string']['query'] = self.pp['q']
             sqs['simple_query_string']['default_operator'] = 'and'
-            self.es['query']['bool']['filter'].append(sqs)
+            self.es['query']['bool']['filter']['bool']['must'].append(sqs)
 
         conditions = ["title","selftext"]
         for condition in conditions:
@@ -118,7 +118,7 @@ class search:
                 sqs['simple_query_string']['query'] = self.pp[condition]
                 sqs['simple_query_string']['fields'] = [condition]
                 sqs['simple_query_string']['default_operator'] = 'and'
-                self.es['query']['bool']['filter'].append(sqs)
+                self.es['query']['bool']['filter']['bool']['must'].append(sqs)
 
         not_conditions = ["title:not", "q:not", "selftext:not"]
         for condition in not_conditions:

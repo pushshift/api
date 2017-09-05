@@ -195,7 +195,7 @@ class search:
             sqs['simple_query_string']['query'] = self.pp['q']
             sqs['simple_query_string']['fields'] = ['body']
             sqs['simple_query_string']['default_operator'] = 'and'
-            self.es['query']['bool']['filter'].append(sqs)
+            self.es['query']['bool']['filter']['bool']['must'].append(sqs)
 
         min_doc_count = 0
         if 'min_doc_count' in self.pp and self.pp['min_doc_count'] is not None and LooksLikeInt(self.pp['min_doc_count']):
