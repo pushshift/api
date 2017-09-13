@@ -40,7 +40,7 @@ There are numerous additional parameters that can be used when performing a comm
 | size | Number of results to return | 25 | Integer <= 500
 | fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
-| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
+| sort_type | Sort by a specific attribute | "created_utc" | "score", "created_utc"
 | aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
 | author | Restrict to a specific author | N/A | String
 | subreddit | Restrict to a specific subreddit | N/A | String
