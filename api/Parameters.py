@@ -1,5 +1,6 @@
 from collections import defaultdict
 from Helpers import *
+from falcon import uri
 import requests
 import json
 import time
@@ -17,8 +18,10 @@ def process(params):
     conditions = ["subreddit","author"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
+            params[condition] = uri.decode(params[condition])
+            print (params[condition])
             if not isinstance(params[condition], (list, tuple)):
-                params[condition] = [params[condition]]
+                params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
             print (param_values)
             for value in param_values:

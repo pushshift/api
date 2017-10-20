@@ -38,7 +38,7 @@ class CreateReply:
         if 'cache_time' in resp.context and resp.context['cache_time'] is not None:
             resp.cache_control = ['public','max-age=' + str(resp.context['cache_time']),'s-maxage=' + str(resp.context['cache_time'])]
         else:
-            resp.cache_control = ['public','max-age=2','s-maxage=2']
+            resp.cache_control = ['public','max-age=1','s-maxage=1']
 
         # Calculate total execution time for request
         execution_time = time.time() - req.context['start_time']

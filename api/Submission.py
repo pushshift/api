@@ -54,8 +54,8 @@ class search:
             data['aggs'] = {}
             if 'subreddit' in response['data']['aggregations']:
                 for bucket in response['data']['aggregations']['subreddit']['buckets']:
-                    bucket['score'] = round(bucket['doc_count'] / bucket['bg_count'],5)
-                newlist = sorted(response['data']['aggregations']['subreddit']['buckets'], key=lambda k: k['score'], reverse=True)
+                    bucket["score"] = round(((bucket["doc_count"] / bucket["bg_count"]) * 100),5)
+                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['doc_count'], reverse=True)
                 data['aggs']['subreddit'] = newlist
 
             if 'author' in response['data']['aggregations']:

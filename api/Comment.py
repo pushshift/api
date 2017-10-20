@@ -142,8 +142,8 @@ class search:
             data["aggs"] = {}
             if 'subreddit' in response["data"]["aggregations"]:
                 for bucket in response["data"]["aggregations"]["subreddit"]["buckets"]:
-                    bucket["score"] = bucket["doc_count"] / bucket["bg_count"]
-                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['score'], reverse=True)
+                    bucket["score"] = round(((bucket["doc_count"] / bucket["bg_count"]) * 100),5)
+                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['doc_count'], reverse=True)
                 data["aggs"]["subreddit"] = newlist
 
             if 'author' in response["data"]["aggregations"]:
@@ -226,7 +226,7 @@ class search:
 
                 if agg.lower() == 'link_id':
                     self.es['aggs']['link_id']['terms']['field'] = "link_id"
-                    self.es['aggs']['link_id']['terms']['size'] = 250
+                    self.es['aggs']['link_id']['terms']['size'] = 100
                     self.es['aggs']['link_id']['terms']['order']['_count'] = "desc"
 
         response = None
