@@ -23,15 +23,13 @@ def process(params):
             if not isinstance(params[condition], (list, tuple)):
                 params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
-            print (param_values)
-            for value in param_values:
-                terms = nested_dict()
-                if value[0] == "!":
-                    terms['term'][condition] = value[1:]
-                    q['query']['bool']['must_not'].append(terms)
-                else:
-                    terms['term'][condition] = value
-                    q['query']['bool']['filter']['bool']['should'].append(terms)
+            terms = nested_dict()
+            if params[condition][0][0] == "!":
+                terms['terms'][condition] = list(map(lambda x:x.replace("!",""),param_values))
+                q['query']['bool']['must_not'].append(terms)
+            else:
+                terms['terms'][condition] = param_values
+                q['query']['bool']['filter']['bool']['must'].append(terms)
 
     if 'delta_only' in params and params['delta_only'] is not None:
         if params['delta_only'].lower() == "true" or params['delta_only'] == "1":
