@@ -4,6 +4,7 @@ from collections import defaultdict
 import Parameters
 from Helpers import *
 import DBFunctions
+import falcon
 
 class search:
     def on_get(self, req, resp):
@@ -202,8 +203,10 @@ class search:
             min_doc_count = self.pp['min_doc_count']
 
         if 'aggs' in self.pp:
-            if isinstance(self.pp['aggs'], str):
-                self.pp['aggs'] = [self.pp['aggs']]
+            self.pp['aggs'] = falcon.uri.decode(self.pp['aggs'])
+            self.pp['aggs'] = self.pp['aggs'].split(",")
+            #if isinstance(self.pp['aggs'], str):
+            #    self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
                     self.es['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
