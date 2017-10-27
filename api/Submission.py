@@ -1,9 +1,11 @@
 import time
 import html
 from collections import defaultdict
+from operator import itemgetter
 import Parameters
 from Helpers import *
-
+import Comment
+import math
 
 class search:
     def on_get(self, req, resp):
@@ -16,12 +18,14 @@ class search:
             return
 
         response = self.search("http://mars:9200/rs/submissions/_search");
-        results = []
+        hits = {}
         data = {}
+        order = 0;
         for hit in response["data"]["hits"]["hits"]:
             source = hit["_source"]
             source["id"] = base36encode(int(hit["_id"]))
-
+            order += 1
+            source["order"] = order
             if 'subreddit_id' in source and source["subreddit_id"] is not None and LooksLikeInt(source["subreddit_id"]):
                 source["subreddit_id"] = "t5_" + base36encode(source["subreddit_id"])
             else:
@@ -47,16 +51,18 @@ class search:
                 for key in list(source):
                     if key.lower() not in self.pp['fields']:
                         source.pop(key, None)
-
-            results.append(source)
+            hits[int(hit["_id"])] = source
 
         if 'aggregations' in response["data"]:
             data['aggs'] = {}
+
             if 'subreddit' in response['data']['aggregations']:
+                newSubBuckets = []
                 for bucket in response['data']['aggregations']['subreddit']['buckets']:
-                    bucket["score"] = round(((bucket["doc_count"] / bucket["bg_count"]) * 100),5)
-                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['doc_count'], reverse=True)
-                data['aggs']['subreddit'] = newlist
+                    #bucket["score"] = round(((bucket["doc_count"] / bucket["bg_count"]) * 100),5)
+                #newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['doc_count'], reverse=True)
+                    newSubBuckets.append(bucket)
+                data['aggs']['subreddit'] = newSubBuckets
 
             if 'author' in response['data']['aggregations']:
                 for bucket in response['data']['aggregations']['author']['buckets']:
@@ -91,6 +97,28 @@ class search:
                 newlist = sorted(response['data']['aggregations']['time_of_day']['buckets'], key=lambda k: k['utc_hour'])
                 data['aggs']['time_of_day'] = newlist
 
+            if 'link_id' in response["data"]["aggregations"]:
+                ids = []
+                for bucket in response["data"]["aggregations"]["link_id"]["buckets"]:
+                    if int(bucket["key"]) in hits:
+                        continue
+                    if 'score' in bucket:
+                        bucket["score"] = bucket["doc_count"] / bucket["bg_count"]
+                    ids.append(bucket["key"])
+                submission_data = getSubmissionsFromES(ids)
+                newlist = []
+                after = 0
+                if "after" in self.pp and self.pp['after'] is not None:
+                    after = int(self.pp["after"])
+                for item in response["data"]["aggregations"]["link_id"]["buckets"]:
+                    if item["key"] in submission_data and submission_data[item["key"]]["created_utc"] > after:
+                        item["data"] = submission_data[item["key"]]
+                        item["data"]["full_link"] = "https://www.reddit.com" + item["data"]["permalink"]
+                        newlist.append(item)
+                data["aggs"]["link_id"] = newlist
+
+        results = list(sorted(hits.values(), key=itemgetter('order')))
+        for result in results: result.pop('order',None)
         data["data"] = results
         data['metadata'] = {}
         data['metadata'] = response['metadata']
@@ -98,6 +126,8 @@ class search:
         data['metadata']['results_returned'] = len(response['data']['hits']['hits'])
         data['metadata']['timed_out'] = response['data']['timed_out']
         data['metadata']['total_results'] = response['data']['hits']['total']
+        if 'filter' in self.pp:
+            data['metadata']['filter'] = self.pp['filter']
         data['metadata']['shards'] = {}
         data['metadata']['shards'] = response['data']['_shards']
         resp.context['data'] = data
@@ -139,11 +169,15 @@ class search:
                 self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
-                    self.es['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
-                    self.es['aggs']['subreddit']['significant_terms']['size'] = 1000
-                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
-                    self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
-                    self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
+                    self.es['aggs']['subreddit']['terms']['field'] = 'subreddit.keyword'
+                    self.es['aggs']['subreddit']['terms']['size'] = 250
+                    self.es['aggs']['subreddit']['terms']['order']['_count'] = 'desc'
+
+                    #self.es['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
+                    #self.es['aggs']['subreddit']['significant_terms']['size'] = 1000
+                    #self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
+                    #self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
+                    #self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'author':
                     self.es['aggs']['author']['terms']['field'] = 'author.keyword'
@@ -171,8 +205,23 @@ class search:
                     self.es['aggs']['time_of_day']['significant_terms']['percentage']
 
         response = requests.get(uri, data=json.dumps(self.es))
+        r = json.loads(response.text)
+        if 'advanced' in self.pp:
+            self.es['size'] = 0
+            self.es.pop('sort',None)
+            if 'aggs' not in self.pp:
+                self.pp['aggs'] = []
+            self.pp['aggs'].append('link_id')
+            c = Comment.search(self)
+            cr = c.doElasticSearch()
+            cd = cr['aggs']['link_id']
+            if 'aggregations' not in r:
+                r['aggregations'] = {}
+            if 'link_id' not in r['aggregations']:
+                r['aggregations']['link_id'] = {}
+            r['aggregations']['link_id']['buckets'] = cd
         results = {}
-        results['data'] = json.loads(response.text)
+        results['data'] = r
         results['metadata'] = {}
         results['metadata']['sort'] = self.pp['sort']
         results['metadata']['sort_type'] = self.pp['sort_type']
@@ -230,3 +279,25 @@ class getCommentIDs:
                 results.append(base36encode(comment_id))
         data['data'] = results
         resp.context['data'] = data
+
+class timeLine:
+
+    def on_get(self, req, resp, submission_id):
+        submission_id = submission_id.lower()
+        if submission_id[:3] == 't3_':
+            submission_id = submission_id[3:]
+        submission_id = base36decode(submission_id)
+        rows = DBFunctions.pgdb.execute("SELECT (json->>'created_utc')::int created_utc FROM comment WHERE (json->>'link_id')::int = %s ORDER BY (json->>'created_utc')::int ASC LIMIT 100000",submission_id)
+        results = []
+        data = {}
+        row_data = {}
+        if rows:
+            for row in rows:
+                created_utc = math.floor(int(row[0])/60)*60
+                if created_utc in row_data:
+                    row_data[created_utc] += 1
+                else:
+                    row_data[created_utc] = 1
+        data['data'] = sorted(row_data.items(), key=itemgetter(0))
+        resp.context['data'] = data
+

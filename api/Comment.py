@@ -7,6 +7,10 @@ import DBFunctions
 import falcon
 
 class search:
+    def __init__(self,arg=None):
+        if arg is not None:
+            self.__dict__=arg.__dict__.copy()
+
     def on_get(self, req, resp):
         self.pp = req.context['processed_parameters']
         self.es = req.context['es_query']
@@ -29,16 +33,19 @@ class search:
         rows = []
 
         # There is a much better method for doing this but this will suffice for the time being
+        link_id_condition = ""
+        if 'link_id' in self.pp and self.pp['link_id']:
+            link_id_condition = "AND (json->>'link_id')::int IN (" + str(','.join(self.pp['link_id'])) + ") "
         if self.pp['after'] == None:
             self.pp['after'] = 0
         if self.pp['before'] == None:
             self.pp['before'] = 9999999999999
         if not 'subreddit' in self.pp or self.pp['subreddit'] is None:
-            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['size']) ))
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s " + link_id_condition + "ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['size']) ))
         elif 'subreddit' in self.pp and self.pp['subbreddit'] is not None:
-            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s AND lower(json->>'subreddit') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['subreddit'], self.pp['size']) ))
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s " + link_id_condition + "AND lower(json->>'subreddit') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['subreddit'], self.pp['size']) ))
         elif 'author' in self.pp and self.pp['suthor'] is not None:
-            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s AND lower(json->>'author') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['author'], self.pp['size']) ))
+            rows = DBFunctions.pgdb.execute("SELECT * FROM comment WHERE (json->>'created_utc')::int > %s AND (json->>'created_utc')::int < %s " + link_id_condition + "AND lower(json->>'author') = %s ORDER BY (json->>'created_utc')::int " + self.pp['sort'] + " LIMIT %s", tuple( (self.pp['after'], self.pp['before'], self.pp['author'], self.pp['size']) ))
 
         results = []
         data = {}
@@ -204,7 +211,8 @@ class search:
 
         if 'aggs' in self.pp:
             self.pp['aggs'] = falcon.uri.decode(self.pp['aggs'])
-            self.pp['aggs'] = self.pp['aggs'].split(",")
+            if isinstance(self.pp['aggs'], str):
+                self.pp['aggs'] = self.pp['aggs'].split(",")
             #if isinstance(self.pp['aggs'], str):
             #    self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):

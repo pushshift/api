@@ -15,11 +15,16 @@ def process(params):
     params = {k.lower(): v for k, v in params.items()} # Lowercase all parameter names passed
     suggested_sort = "desc";
 
-    conditions = ["subreddit","author"]
+    if 'link_id' in params and params['link_id'] is not None:
+        params['link_id'] = params['link_id'].lower()
+        if params['link_id'][:3] == "t3_":
+            params['link_id'] = params['link_id'][3:]
+        params['link_id'] = str(int(params['link_id'],36))
+
+    conditions = ["subreddit","author","domain","link_id"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
-            print (params[condition])
             if not isinstance(params[condition], (list, tuple)):
                 params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
@@ -30,6 +35,11 @@ def process(params):
             else:
                 terms['terms'][condition] = param_values
                 q['query']['bool']['filter']['bool']['must'].append(terms)
+
+    if 'aggs' in params and params['aggs'] is not None:
+        params['aggs'] = uri.decode(params['aggs'])
+        if isinstance(params['aggs'], str):
+            params['aggs'] = params['aggs'].split(',')
 
     if 'delta_only' in params and params['delta_only'] is not None:
         if params['delta_only'].lower() == "true" or params['delta_only'] == "1":

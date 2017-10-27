@@ -34,6 +34,8 @@ class PreProcessing:
 class CreateReply:
     def process_response(self, req, resp, resource, req_succeeded):
 
+        if resource is None:
+            return
         # Set appropriate cache level for response
         if 'cache_time' in resp.context and resp.context['cache_time'] is not None:
             resp.cache_control = ['public','max-age=' + str(resp.context['cache_time']),'s-maxage=' + str(resp.context['cache_time'])]
@@ -41,14 +43,33 @@ class CreateReply:
             resp.cache_control = ['public','max-age=1','s-maxage=1']
 
         # Calculate total execution time for request
-        execution_time = time.time() - req.context['start_time']
+        if hasattr(req, 'context') and 'start_time' in req.context:
+            execution_time = time.time() - req.context['start_time']
+
+        # Filter out fields if filter parameter is present
+        if 'filter' in req.context['processed_parameters']:
+            new_list = []
+            if isinstance(req.context['processed_parameters']['filter'], str):
+                req.context['processed_parameters']['filter'] = [req.context['processed_parameters']['filter']]
+            for datum in resp.context['data']['data']:
+                new_element = {}
+                for filter in req.context['processed_parameters']['filter']:
+                    if filter in datum:
+                        new_element[filter] = datum[filter]
+                new_list.append(new_element)
+            resp.context['data']['data'] = new_list
 
         # Create Response and metadata
         if 'metadata' not in resp.context['data']:
             resp.context['data']['metadata'] = {}
-        resp.context['data']['metadata'].update(req.context['processed_parameters'])
-        resp.context['data']['metadata']['execution_time_milliseconds'] = round((execution_time) * 1000,2)
-        resp.context['data']['metadata']['api_version'] = API_VERSION
+
+        if 'metadata' in req.context['processed_parameters'] and req.context['processed_parameters']['metadata'].lower() == "true":
+            resp.context['data']['metadata'].update(req.context['processed_parameters'])
+            resp.context['data']['metadata']['execution_time_milliseconds'] = round((execution_time) * 1000,2)
+            resp.context['data']['metadata']['api_version'] = API_VERSION
+        else:
+            resp.context['data'].pop('metadata',None)
+
         resp.body = json.dumps(resp.context['data'],sort_keys=True,indent=4, separators=(',', ': '))
 
 class Middleware(object):
@@ -93,5 +114,8 @@ api.add_route('/reddit/submission/search', Submission.search())
 api.add_route('/reddit/analyze/user/{author}', User.Analyze())
 api.add_route('/get/comment_ids/{submission_id}', Submission.getCommentIDs())
 api.add_route('/reddit/submission/comment_ids/{submission_id}', Submission.getCommentIDs())
+api.add_route('/reddit/submission/comment_ids/{submission_id}', Submission.getCommentIDs())
+#api.add_route('/reddit/submission/timeline/{submission_id}', Submission.timeLine())
 api.add_route('/test', Test.test())
+#api.add_route('/',Test.test())
 
