@@ -81,24 +81,31 @@ def process(params):
         params['before'] = None
 
     if 'score' in params and params['score'] is not None:
+        if not isinstance(params['score'], (list, tuple)):
+            params['score'] = [params['score']]
         range = nested_dict()
-        if params['score'][:1] == "<":
-            range['range']['score']['lt'] = int(params['score'][1:])
-        elif params['score'][:1] == ">":
-            range['range']['score']['gt'] = int(params['score'][1:])
-        elif LooksLikeInt(params['score']):
-            range['term']['score'] = int(params['score'])
-        q['query']['bool']['filter']['bool']['must'].append(range)
+        for score in params['score']:
+            if score[:1] == "<":
+                range['range']['score']['lt'] = int(score[1:])
+            elif score[:1] == ">":
+                range['range']['score']['gt'] = int(score[1:])
+            elif LooksLikeInt(score):
+                range['term']['score'] = int(score)
+            q['query']['bool']['filter']['bool']['must'].append(range)
 
     if 'num_comments' in params and params['num_comments'] is not None:
+        if not isinstance(params['num_comments'], (list, tuple)):
+            params['num_comments'] = [params['num_comments']]
         range = nested_dict()
-        if params['num_comments'][:1] == "<":
-            range['range']['num_comments']['lt'] = int(params['num_comments'][1:])
-        elif params['num_comments'][:1] == ">":
-            range['range']['num_comments']['gt'] = int(params['num_comments'][1:])
-        elif LooksLikeInt(params['num_comments']):
-            range['term']['num_comments'] = int(params['num_comments'])
-        q['query']['bool']['filter']['bool']['must'].append(range)
+        for p in params['num_comments']:
+            range = nested_dict()
+            if p[:1] == "<":
+                range['range']['num_comments']['lt'] = int(p[1:])
+            elif p[:1] == ">":
+                range['range']['num_comments']['gt'] = int(p[1:])
+            elif LooksLikeInt(p):
+                range['term']['num_comments'] = int(p)
+            q['query']['bool']['filter']['bool']['must'].append(range)
 
     conditions = ["over_18","is_video","stickied","spoiler","locked","contest_mode"]
     for condition in conditions:

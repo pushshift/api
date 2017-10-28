@@ -12,6 +12,10 @@ class search:
         self.pp = req.context['processed_parameters']
         self.es = req.context['es_query']
 
+        # Handle Cache for expensive requests (this will need to be organized better later on)
+        if 'advanced' in self.pp and self.pp['advanced'].lower() == "true":
+            resp.context["cache_time"] = 60
+
         if 'ids' in self.pp:
             data = self.getIds(self.pp['ids'])
             resp.context["data"] = data
@@ -76,6 +80,12 @@ class search:
                     bucket.pop('key_as_string', None)
                     bucket['key'] = int(bucket['key'] / 1000)
                 data['aggs']['created_utc'] = response['data']['aggregations']['created_utc']['buckets']
+
+            if 'comment_created_utc' in response['data']['aggregations']:
+                for bucket in response['data']['aggregations']['comment_created_utc']['buckets']:
+                    bucket.pop('key_as_string', None)
+                    bucket['key'] = int(bucket['key'])
+                data['aggs']['comment_created_utc'] = response['data']['aggregations']['comment_created_utc']['buckets']
 
             if 'domain' in response['data']['aggregations']:
                 newBuckets = []
@@ -170,7 +180,7 @@ class search:
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
                     self.es['aggs']['subreddit']['terms']['field'] = 'subreddit.keyword'
-                    self.es['aggs']['subreddit']['terms']['size'] = 250
+                    self.es['aggs']['subreddit']['terms']['size'] = 100
                     self.es['aggs']['subreddit']['terms']['order']['_count'] = 'desc'
 
                     #self.es['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
@@ -181,7 +191,7 @@ class search:
 
                 if agg.lower() == 'author':
                     self.es['aggs']['author']['terms']['field'] = 'author.keyword'
-                    self.es['aggs']['author']['terms']['size'] = 1000
+                    self.es['aggs']['author']['terms']['size'] = 100
                     self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
                     #self.es['aggs']['author']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
                     #self.es['aggs']['author']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
@@ -196,7 +206,7 @@ class search:
 
                 if agg.lower() == 'domain':
                     self.es['aggs']['domain']['terms']['field'] = 'domain.keyword'
-                    self.es['aggs']['domain']['terms']['size'] = 1000
+                    self.es['aggs']['domain']['terms']['size'] = 250
                     self.es['aggs']['domain']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'time_of_day':
@@ -206,20 +216,32 @@ class search:
 
         response = requests.get(uri, data=json.dumps(self.es))
         r = json.loads(response.text)
-        if 'advanced' in self.pp:
+        if 'advanced' in self.pp and self.pp['advanced'].lower() == "true":
+            #resp.context['cache_time'] = 60
             self.es['size'] = 0
             self.es.pop('sort',None)
+            self.es['aggs'] = nested_dict()
+
+            # Remove Domain from ES object if present
+            for key in self.es['query']['bool']['filter']['bool']['must']:
+                if 'terms' in key and 'domain' in key['terms']:
+                    self.es['query']['bool']['filter']['bool']['must'].remove(key)
+
             if 'aggs' not in self.pp:
                 self.pp['aggs'] = []
             self.pp['aggs'].append('link_id')
+            self.pp['aggs'].append('created_utc')
             c = Comment.search(self)
             cr = c.doElasticSearch()
             cd = cr['aggs']['link_id']
+            comment_created_utc_agg = cr['aggs']['created_utc']
             if 'aggregations' not in r:
                 r['aggregations'] = {}
             if 'link_id' not in r['aggregations']:
                 r['aggregations']['link_id'] = {}
+            r['aggregations']['comment_created_utc'] = {}
             r['aggregations']['link_id']['buckets'] = cd
+            r['aggregations']['comment_created_utc']['buckets'] = comment_created_utc_agg
         results = {}
         results['data'] = r
         results['metadata'] = {}

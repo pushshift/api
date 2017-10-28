@@ -151,7 +151,7 @@ class search:
             if 'subreddit' in response["data"]["aggregations"]:
                 for bucket in response["data"]["aggregations"]["subreddit"]["buckets"]:
                     bucket["score"] = round(((bucket["doc_count"] / bucket["bg_count"]) * 100),5)
-                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['doc_count'], reverse=True)
+                newlist = sorted(response["data"]["aggregations"]["subreddit"]["buckets"], key=lambda k: k['score'], reverse=True)
                 data["aggs"]["subreddit"] = newlist
 
             if 'author' in response["data"]["aggregations"]:
@@ -218,14 +218,14 @@ class search:
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
                     self.es['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
-                    self.es['aggs']['subreddit']['significant_terms']['size'] = 1000
+                    self.es['aggs']['subreddit']['significant_terms']['size'] = 250
                     self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = "painless"
                     self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = "params._subset_freq"
                     self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'author':
                     self.es['aggs']['author']['terms']['field'] = 'author.keyword'
-                    self.es['aggs']['author']['terms']['size'] = 1000
+                    self.es['aggs']['author']['terms']['size'] = 250
                     self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'created_utc':
