@@ -14,7 +14,7 @@ class search:
     def on_get(self, req, resp):
         self.pp = req.context['processed_parameters']
         self.es = req.context['es_query']
-
+        self.req = req.params
         # What kind of request is this?
         if 'ids' in self.pp:
             data = self.getIds(self.pp['ids'])
@@ -27,9 +27,15 @@ class search:
     def getMostRecent(self,resp):
 
         # This will need to be optimized eventually to seperate searches with q parameter vs. one without it
-        if self.pp['size'] >= 500:
-            self.pp['size'] = 500
-            resp.context['cache_time'] = 6
+        if 'limit' in self.req and self.req['limit'] is not None:
+            self.req['limit'] = int(self.req['limit'])
+            if self.req['limit'] >= 10000:
+                self.pp['size'] = 10000
+            else :
+                self.pp['size'] = self.req['limit']
+        else:
+            self.pp['size'] = 100
+        resp.context['cache_time'] = 6
         rows = []
 
         # There is a much better method for doing this but this will suffice for the time being
@@ -241,6 +247,7 @@ class search:
                     self.es['aggs']['link_id']['terms']['order']['_count'] = "desc"
 
         response = None
+        print(json.dumps(self.es))
         try:
             response = requests.get(uri, data=json.dumps(self.es))
         except requests.exceptions.RequestException as e:

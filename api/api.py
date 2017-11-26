@@ -59,6 +59,12 @@ class CreateReply:
                 new_list.append(new_element)
             resp.context['data']['data'] = new_list
 
+        # Filter out users who requested to be removed from API
+        for datum in resp.context['data']['data']:
+            if 'author' in datum:
+                if datum['author'] == "bilbo-t-baggins":
+                    resp.context['data']['data'].remove(datum)
+
         # Create Response and metadata
         if 'metadata' not in resp.context['data']:
             resp.context['data']['metadata'] = {}

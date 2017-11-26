@@ -28,6 +28,9 @@ def process(params):
             if not isinstance(params[condition], (list, tuple)):
                 params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
+            # Need to make this a function for when users request to be removed from API
+            if condition == "author":
+                while 'bilbo-t-baggins' in param_values: param_values.remove('bilbo-t-baggins')
             terms = nested_dict()
             if params[condition][0][0] == "!":
                 terms['terms'][condition] = list(map(lambda x:x.replace("!",""),param_values))

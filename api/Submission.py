@@ -148,6 +148,7 @@ class search:
         if 'q' in self.pp and self.pp['q'] is not None:
             sqs = nested_dict()
             sqs['simple_query_string']['query'] = self.pp['q']
+            sqs['simple_query_string']['fields'] = ["title^5","selftext^2"]
             sqs['simple_query_string']['default_operator'] = 'and'
             self.es['query']['bool']['filter']['bool']['must'].append(sqs)
 
@@ -226,6 +227,8 @@ class search:
             for key in self.es['query']['bool']['filter']['bool']['must']:
                 if 'terms' in key and 'domain' in key['terms']:
                     self.es['query']['bool']['filter']['bool']['must'].remove(key)
+                if 'range' in key and 'num_comments' in key['range']:
+                    self.es['query']['bool']['filter']['bool']['must'].remove(key)
 
             if 'aggs' not in self.pp:
                 self.pp['aggs'] = []
@@ -262,6 +265,7 @@ class search:
         q = nested_dict()
         self.es["query"]["terms"]["id"] = ids_to_fetch
         self.es["size"] = 500
+        q["query"]["ids"]["values"] = ids_to_fetch
         response = requests.get("http://mars:9200/rs/submissions/_search", data=json.dumps(q))
         s = json.loads(response.text)
         results = []
