@@ -157,12 +157,17 @@ def process(params):
         params['sort'] = params['order'].lower()
 
     if 'sort' in params and params['sort'] is not None:
-        params['sort'] = params['sort'].lower()
+        if ":" in params['sort']:
+            params['sort_type'], params['sort'] = params['sort'].split(":")
+        else:
+            params['sort'] = params['sort'].lower()
         if params['sort'] != "asc" and params['sort'] != "desc":
             params['sort'] = suggested_sort
     else:
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
+
+
 
     if 'frequency' in params and params['frequency'] is not None:
         if params['frequency'][-1:] in ['s','m','h','d','w','M','y'] and LooksLikeInt(params['frequency'][:1]):

@@ -3,7 +3,7 @@ import html
 from collections import defaultdict
 import Parameters
 from Helpers import *
-import DBFunctions
+#import DBFunctions
 import falcon
 
 class search:
@@ -18,8 +18,8 @@ class search:
         # What kind of request is this?
         if 'ids' in self.pp:
             data = self.getIds(self.pp['ids'])
-        elif ('q' not in self.pp or self.pp['q'] is None) and ('subreddit' not in self.pp and 'author' not in self.pp):
-            data = self.getMostRecent(resp)
+        #elif ('q' not in self.pp or self.pp['q'] is None) and ('subreddit' not in self.pp and 'author' not in self.pp):
+        #    data = self.getMostRecent(resp)
         else:
             data = self.doElasticSearch()
         resp.context['data'] = data
@@ -224,7 +224,7 @@ class search:
             #    self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
-                    self.es['aggs']['subreddit']['significant_terms']['field'] = "subreddit.keyword"
+                    self.es['aggs']['subreddit']['significant_terms']['field'] = "subreddit"
                     self.es['aggs']['subreddit']['significant_terms']['size'] = 250
                     self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = "painless"
                     self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = "params._subset_freq"

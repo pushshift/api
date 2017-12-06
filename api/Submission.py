@@ -299,7 +299,7 @@ class getCommentIDs:
         if submission_id[:3] == 't3_':
             submission_id = submission_id[3:]
         submission_id = base36decode(submission_id)
-        rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
+        #rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
         results = []
         data = {}
         if rows:

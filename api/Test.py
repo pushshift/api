@@ -3,7 +3,7 @@ import html
 from collections import defaultdict
 import Parameters
 from Helpers import *
-import DBFunctions
+#import DBFunctions
 
 class test:
     params = None

@@ -5,7 +5,7 @@ import json
 import requests
 import time
 import html
-import DBFunctions
+#import DBFunctions
 import psycopg2
 import math
 import redis
