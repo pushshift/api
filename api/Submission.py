@@ -21,7 +21,7 @@ class search:
             resp.context["data"] = data
             return
 
-        response = self.search("http://mars:9200/rs/submissions/_search");
+        response = self.search("http://localhost:9200/rs/submission/_search");
         hits = {}
         data = {}
         order = 0;
@@ -215,7 +215,10 @@ class search:
                     self.es['aggs']['time_of_day']['significant_terms']['size'] = 25
                     self.es['aggs']['time_of_day']['significant_terms']['percentage']
 
-        response = requests.get(uri, data=json.dumps(self.es))
+        routing = None
+        if 'subreddit' in self.pp:
+            routing = {'routing':','.join(self.pp['subreddit'])}
+        response = requests.get(uri, data=json.dumps(self.es),headers={'Content-Type': 'application/json'},params=routing)
         r = json.loads(response.text)
         if 'advanced' in self.pp and self.pp['advanced'].lower() == "true":
             #resp.context['cache_time'] = 60
@@ -266,7 +269,7 @@ class search:
         self.es["query"]["terms"]["id"] = ids_to_fetch
         self.es["size"] = 500
         q["query"]["ids"]["values"] = ids_to_fetch
-        response = requests.get("http://mars:9200/rs/submissions/_search", data=json.dumps(q))
+        response = requests.get("http://localhost:9200/rs/submission/_search", data=json.dumps(q))
         s = json.loads(response.text)
         results = []
         for hit in s["hits"]["hits"]:

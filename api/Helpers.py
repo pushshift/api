@@ -42,7 +42,7 @@ def getSubmissionsFromES(ids):
     q = nested_dict()
     q["query"]["terms"]["id"] = ids
     q["size"] = 1000
-    response = requests.get("http://mars:9200/rs/submissions/_search", data=json.dumps(q))
+    response = requests.get("http://localhost:9200/rs/submissions/_search", data=json.dumps(q))
     s = json.loads(response.text)
     results = {}
     for hit in s["hits"]["hits"]:

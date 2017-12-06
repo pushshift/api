@@ -107,7 +107,7 @@ class search:
 
     def doElasticSearch(self):
 
-        self.pp['index'] = "rc"
+        self.pp['index'] = "rc_*"
 
         # Only search the current comment index if after is set and within a month of current time
         if 'after' in self.pp and self.pp['after'] is not None:
@@ -117,9 +117,10 @@ class search:
             self.pp['index'] = "rc_delta"
         # ----
 
-        response = self.search("http://mars:9200/" + self.pp['index'] + "/comments/_search")
+        response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
         results = []
         data = {}
+        print(response)
         for hit in response["data"]["hits"]["hits"]:
             source = hit["_source"]
             source["id"] = base36encode(int(hit["_id"]))
@@ -249,9 +250,9 @@ class search:
         response = None
         print(json.dumps(self.es))
         try:
-            response = requests.get(uri, data=json.dumps(self.es))
+            response = requests.get(uri, data=json.dumps(self.es), headers={'Content-Type': 'application/json'})
         except requests.exceptions.RequestException as e:
-            response = requests.get("http://jupiter:9200/rc/comments/_search", data=json.dumps(self.es))
+            response = requests.get("http://localhost:9200/rc/comments/_search", data=json.dumps(self.es))
 
         results = {}
         results['data'] = json.loads(response.text)

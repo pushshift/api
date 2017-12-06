@@ -21,7 +21,7 @@ def process(params):
             params['link_id'] = params['link_id'][3:]
         params['link_id'] = str(int(params['link_id'],36))
 
-    conditions = ["subreddit","author","domain","link_id"]
+    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
@@ -29,6 +29,7 @@ def process(params):
                 params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
             # Need to make this a function for when users request to be removed from API
+            print(condition)
             if condition == "author":
                 while 'bilbo-t-baggins' in param_values: param_values.remove('bilbo-t-baggins')
             terms = nested_dict()
@@ -36,6 +37,7 @@ def process(params):
                 terms['terms'][condition] = list(map(lambda x:x.replace("!",""),param_values))
                 q['query']['bool']['must_not'].append(terms)
             else:
+                if condition == "url": condition = "url.keyword"
                 terms['terms'][condition] = param_values
                 q['query']['bool']['filter']['bool']['must'].append(terms)
 
@@ -47,6 +49,9 @@ def process(params):
     if 'delta_only' in params and params['delta_only'] is not None:
         if params['delta_only'].lower() == "true" or params['delta_only'] == "1":
             params['delta_only'] = True
+
+#    if 'subreddit_type' in params and params['subreddit_type'] is not None:
+#        q['query']['bool']['filter']['bool']['must'].append(
 
     if 'after' in params and params['after'] is not None:
         if LooksLikeInt(params['after']):
@@ -110,7 +115,21 @@ def process(params):
                 range['term']['num_comments'] = int(p)
             q['query']['bool']['filter']['bool']['must'].append(range)
 
-    conditions = ["over_18","is_video","stickied","spoiler","locked","contest_mode"]
+    if 'num_crossposts' in params and params['num_crossposts'] is not None:
+        if not isinstance(params['num_crossposts'], (list, tuple)):
+            params['num_crossposts'] = [params['num_crossposts']]
+        range = nested_dict()
+        for p in params['num_crossposts']:
+            range = nested_dict()
+            if p[:1] == "<":
+                range['range']['num_crossposts']['lt'] = int(p[1:])
+            elif p[:1] == ">":
+                range['range']['num_crossposts']['gt'] = int(p[1:])
+            elif LooksLikeInt(p):
+                range['term']['num_crossposts'] = int(p)
+            q['query']['bool']['filter']['bool']['must'].append(range)
+
+    conditions = ["is_self","over_18","is_video","stickied","spoiler","locked","contest_mode","is_crosspostable","brand_safe"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             parameter = nested_dict()
