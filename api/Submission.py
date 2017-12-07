@@ -187,7 +187,7 @@ class search:
                 self.pp['aggs'] = [self.pp['aggs']]
             for agg in list(self.pp['aggs']):
                 if agg.lower() == 'subreddit':
-                    self.es['aggs']['subreddit']['terms']['field'] = 'subreddit.keyword'
+                    self.es['aggs']['subreddit']['terms']['field'] = 'subreddit'
                     self.es['aggs']['subreddit']['terms']['size'] = 100
                     self.es['aggs']['subreddit']['terms']['order']['_count'] = 'desc'
 
