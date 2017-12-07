@@ -22,6 +22,7 @@ class search:
             return
 
         response = self.search("http://localhost:9200/rs/submission/_search");
+        #print(response)
         hits = {}
         data = {}
         order = 0;
@@ -74,6 +75,12 @@ class search:
                         bucket['score'] = bucket['doc_count'] / bucket['bg_count']
                 newlist = response['data']['aggregations']['author']['buckets']
                 data['aggs']['author'] = newlist
+
+            for k in ["author_flair_text","author_flair_css_class","link_flair_text","link_flair_css_class","url"]:
+                if k in response["data"]["aggregations"]:
+                    for bucket in response["data"]["aggregations"][k]["buckets"]:
+                        bucket.pop('key_as_string', None)
+                    data["aggs"][k] = response["data"]["aggregations"][k]["buckets"]
 
             if 'created_utc' in response['data']['aggregations']:
                 for bucket in response['data']['aggregations']['created_utc']['buckets']:
@@ -189,6 +196,18 @@ class search:
                     #self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
                     #self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
                     #self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
+
+
+                for k in ["author_flair_text","author_flair_css_class","link_flair_text","link_flair_css_class"]:
+                    if agg.lower() == k:
+                        self.es['aggs'][k]['terms']['field'] = k
+                        self.es['aggs'][k]['terms']['size'] = 250
+                        self.es['aggs'][k]['terms']['order']['_count'] = 'desc'
+
+                if agg.lower() == 'url':
+                    self.es['aggs']['url']['terms']['field'] = 'url.keyword'
+                    self.es['aggs']['url']['terms']['size'] = 100
+                    self.es['aggs']['url']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'author':
                     self.es['aggs']['author']['terms']['field'] = 'author.keyword'

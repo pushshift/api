@@ -1,3 +1,4 @@
+
 import time
 import html
 from collections import defaultdict
@@ -120,7 +121,7 @@ class search:
         response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
         results = []
         data = {}
-        print(response)
+        #print(response)
         for hit in response["data"]["hits"]["hits"]:
             source = hit["_source"]
             source["id"] = base36encode(int(hit["_id"]))
@@ -167,6 +168,12 @@ class search:
                         bucket["score"] = bucket["doc_count"] / bucket["bg_count"]
                 newlist = response["data"]["aggregations"]["author"]["buckets"]
                 data["aggs"]["author"] = newlist
+
+            for k in ["author_flair_text","author_flair_css_class"]:
+                if k in response["data"]["aggregations"]:
+                    for bucket in response["data"]["aggregations"][k]["buckets"]:
+                        bucket.pop('key_as_string', None)
+                    data["aggs"][k] = response["data"]["aggregations"][k]["buckets"]
 
             if 'created_utc' in response["data"]["aggregations"]:
                 for bucket in response["data"]["aggregations"]["created_utc"]["buckets"]:
@@ -230,8 +237,14 @@ class search:
                     self.es['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = "params._subset_freq"
                     self.es['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
+                for k in ["author_flair_text","author_flair_css_class"]:
+                    if agg.lower() == k:
+                        self.es['aggs'][k]['terms']['field'] = k
+                        self.es['aggs'][k]['terms']['size'] = 250
+                        self.es['aggs'][k]['terms']['order']['_count'] = 'desc'
+
                 if agg.lower() == 'author':
-                    self.es['aggs']['author']['terms']['field'] = 'author.keyword'
+                    self.es['aggs']['author']['terms']['field'] = 'author'
                     self.es['aggs']['author']['terms']['size'] = 250
                     self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
 
