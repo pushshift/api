@@ -71,6 +71,11 @@ def process(params):
     else:
         params['after'] = None
 
+    if 'before_id' in params and params['before_id'] is not None:
+        range = nested_dict()
+        range['range']['id']['lt'] = params['before_id']
+        q['query']['bool']['filter']['bool']['must'].append(range)
+
     if 'before' in params and params['before'] is not None:
         if LooksLikeInt(params['before']):
             params['before'] = int(params['before'])
