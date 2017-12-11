@@ -21,7 +21,7 @@ def process(params):
             params['link_id'] = params['link_id'][3:]
         params['link_id'] = str(int(params['link_id'],36))
 
-    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class"]
+    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class","nest_level"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
@@ -49,9 +49,6 @@ def process(params):
     if 'delta_only' in params and params['delta_only'] is not None:
         if params['delta_only'].lower() == "true" or params['delta_only'] == "1":
             params['delta_only'] = True
-
-#    if 'subreddit_type' in params and params['subreddit_type'] is not None:
-#        q['query']['bool']['filter']['bool']['must'].append(
 
     if 'after' in params and params['after'] is not None:
         if LooksLikeInt(params['after']):
@@ -93,47 +90,25 @@ def process(params):
     else:
         params['before'] = None
 
-    if 'score' in params and params['score'] is not None:
-        if not isinstance(params['score'], (list, tuple)):
-            params['score'] = [params['score']]
-        range = nested_dict()
-        for score in params['score']:
-            if score[:1] == "<":
-                range['range']['score']['lt'] = int(score[1:])
-            elif score[:1] == ">":
-                range['range']['score']['gt'] = int(score[1:])
-            elif LooksLikeInt(score):
-                range['term']['score'] = int(score)
-            q['query']['bool']['filter']['bool']['must'].append(range)
-
-    if 'num_comments' in params and params['num_comments'] is not None:
-        if not isinstance(params['num_comments'], (list, tuple)):
-            params['num_comments'] = [params['num_comments']]
-        range = nested_dict()
-        for p in params['num_comments']:
+    # Handle parameters that are range parameters (less than, greater than, equal to, etc.)
+    conditions = ["reply_delay","score","num_comments","num_crossposts"]
+    for condition in conditions:
+        if condition in params and params[condition] is not None:
+            params[condition] = uri.decode(params[condition])
+            if not isinstance(params[condition], (list, tuple)):
+                params[condition] = [params[condition]]
             range = nested_dict()
-            if p[:1] == "<":
-                range['range']['num_comments']['lt'] = int(p[1:])
-            elif p[:1] == ">":
-                range['range']['num_comments']['gt'] = int(p[1:])
-            elif LooksLikeInt(p):
-                range['term']['num_comments'] = int(p)
-            q['query']['bool']['filter']['bool']['must'].append(range)
+            for p in params[condition]:
+                range = nested_dict()
+                if p[:1] == "<":
+                    range['range'][condition]['lt'] = int(p[1:])
+                elif p[:1] == ">":
+                    range['range'][condition]['gt'] = int(p[1:])
+                elif LooksLikeInt(p):
+                    range['term'][condition] = int(p)
+                q['query']['bool']['filter']['bool']['must'].append(range)
 
-    if 'num_crossposts' in params and params['num_crossposts'] is not None:
-        if not isinstance(params['num_crossposts'], (list, tuple)):
-            params['num_crossposts'] = [params['num_crossposts']]
-        range = nested_dict()
-        for p in params['num_crossposts']:
-            range = nested_dict()
-            if p[:1] == "<":
-                range['range']['num_crossposts']['lt'] = int(p[1:])
-            elif p[:1] == ">":
-                range['range']['num_crossposts']['gt'] = int(p[1:])
-            elif LooksLikeInt(p):
-                range['term']['num_crossposts'] = int(p)
-            q['query']['bool']['filter']['bool']['must'].append(range)
-
+    # Handle boolean type conditions
     conditions = ["is_self","over_18","is_video","stickied","spoiler","locked","contest_mode","is_crosspostable","brand_safe"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
@@ -153,7 +128,7 @@ def process(params):
         params['size'] = params['limit']
 
     if 'size' in params and params['size'] is not None and LooksLikeInt(params['size']):
-        size = 500 if int(params['size']) > 500 else int(params['size'])
+        size = 1000 if int(params['size']) > 1000 else int(params['size'])
         q['size'] = params['size'] = size
     else:
         q['size'] = params['size'] = 25
@@ -171,8 +146,6 @@ def process(params):
     else:
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
-
-
 
     if 'frequency' in params and params['frequency'] is not None:
         if params['frequency'][-1:] in ['s','m','h','d','w','M','y'] and LooksLikeInt(params['frequency'][:1]):

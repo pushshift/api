@@ -108,7 +108,7 @@ class search:
 
     def doElasticSearch(self):
 
-        self.pp['index'] = "rc_*"
+        self.pp['index'] = "rc"
 
         # Only search the current comment index if after is set and within a month of current time
         if 'after' in self.pp and self.pp['after'] is not None:
@@ -121,7 +121,6 @@ class search:
         response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
         results = []
         data = {}
-        #print(response)
         for hit in response["data"]["hits"]["hits"]:
             source = hit["_source"]
             source["id"] = base36encode(int(hit["_id"]))
@@ -245,7 +244,7 @@ class search:
 
                 if agg.lower() == 'author':
                     self.es['aggs']['author']['terms']['field'] = 'author'
-                    self.es['aggs']['author']['terms']['size'] = 250
+                    self.es['aggs']['author']['terms']['size'] = 500
                     self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
 
                 if agg.lower() == 'created_utc':
