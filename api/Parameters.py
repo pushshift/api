@@ -21,7 +21,7 @@ def process(params):
             params['link_id'] = params['link_id'][3:]
         params['link_id'] = str(int(params['link_id'],36))
 
-    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class","nest_level"]
+    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
@@ -91,7 +91,7 @@ def process(params):
         params['before'] = None
 
     # Handle parameters that are range parameters (less than, greater than, equal to, etc.)
-    conditions = ["reply_delay","score","num_comments","num_crossposts"]
+    conditions = ["reply_delay","score","num_comments","num_crossposts","nest_level"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
