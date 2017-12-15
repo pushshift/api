@@ -158,4 +158,3 @@ def process(params):
         else:
             params['frequency'] = None
     return(params,q)
-

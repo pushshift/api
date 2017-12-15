@@ -69,7 +69,7 @@ class CreateReply:
         if 'metadata' not in resp.context['data']:
             resp.context['data']['metadata'] = {}
 
-        if 'metadata' in req.context['processed_parameters'] and req.context['processed_parameters']['metadata'].lower() == "true":
+        if 'metadata' in req.context['processed_parameters']:
             resp.context['data']['metadata'].update(req.context['processed_parameters'])
             resp.context['data']['metadata']['execution_time_milliseconds'] = round((execution_time) * 1000,2)
             resp.context['data']['metadata']['api_version'] = API_VERSION
@@ -112,6 +112,7 @@ class Middleware(object):
         pass
 
 api = falcon.API(middleware=[PreProcessing(),CreateReply()])
+api.req_options.keep_blank_qs_values = True
 api.add_route('/reddit/search', Comment.search())
 api.add_route('/reddit/comment/search', Comment.search())
 api.add_route('/reddit/search/comment', Comment.search())
