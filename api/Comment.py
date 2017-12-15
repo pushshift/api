@@ -112,11 +112,11 @@ class search:
 
         # Only search the current comment index if after is set and within a month of current time
         if 'after' in self.pp and self.pp['after'] is not None:
-            if self.pp['after'] > (time.time() - 2592000):
-                self.pp['index'] = "rc_delta"
-        if 'delta_only' in self.pp and self.pp['delta_only'] is True:
-            self.pp['index'] = "rc_delta"
-        # ----
+            pass
+
+            # This section needs some logic to help limit the number of indexes looked at if we know the time bounds
+            # from the supplied before and after parameters
+            # ----
 
         response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
         results = []
@@ -260,7 +260,6 @@ class search:
                     self.es['aggs']['link_id']['terms']['order']['_count'] = "desc"
 
         response = None
-        print(json.dumps(self.es))
         try:
             response = requests.get(uri, data=json.dumps(self.es), headers={'Content-Type': 'application/json'})
         except requests.exceptions.RequestException as e:
