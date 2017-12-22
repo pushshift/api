@@ -27,7 +27,7 @@ To search for comments, use the https://api.pushshift.io/reddit/search/comment/ 
 
 https://api.pushshift.io/reddit/search/comment/?q=science
 
-This will search the most recent comments with the term "science" in the body of the comment.  This search is not case-sensitive, so it will find any occurence of the term "science" regardless of capitalization.  The API defaults to sorting by recently made comments first.  After performing this search, 25 results are returned.  This is the default size for searches and can be adjusted using the size parameter.  This will be discussed in further detail in the parameters section.  Data is returned in JSON format and actual search results are included in the "data" key.  There is also a "metadata" key that gives additional information about the search including total number of results found, how long the search took to process, etc.  If aggregations are requested, all aggregation data is returned under the aggs key.
+This will search the most recent comments with the term "science" in the body of the comment.  This search is not case-sensitive, so it will find any occurence of the term "science" regardless of capitalization.  The API defaults to sorting by recently made comments first.  After performing this search, 100 results are returned.  This is the default size for searches and can be adjusted using the limit parameter.  This will be discussed in further detail in the parameters section.  Data is returned in JSON format and actual search results are included in the "data" key.  There is also a "metadata" key that gives additional information about the search including total number of results found, how long the search took to process, etc.  If aggregations are requested, all aggregation data is returned under the aggs key.
 
 # Search parameters for comments
 
@@ -37,7 +37,7 @@ There are numerous additional parameters that can be used when performing a comm
 | ------ | ------ | ------- | ------ |
 | q | Search term. | N/A | String / Quoted String for phrases |
 | ids | Get specific comments via their ids | N/A | Comma-delimited base36 ids |
-| size | Number of results to return | 25 | Integer <= 500
+| limit | Number of results to return | 99 | Integer <= 10000
 | fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
 | sort_type | Sort by a specific attribute | "created_utc" | "score", "created_utc"
@@ -65,13 +65,13 @@ There are quite a few parameters to review, so let's start by providing some mor
 
 https://api.pushshift.io/reddit/search/comment/?q=science&subreddit=askscience
 
-## Using the sort and size parameters
+## Using the sort and limit parameters
 
-This will return 25 comments containing the term "science" but only from the /r/askscience subreddit.  Since we didn't ask for a specific sort method, the most recent comments are returned (the sort parameter defaults to "desc").  What if we wanted the first comment ever to /r/askscience that mentioned the word "science"?  We could use the sort and size parameters to handle that.
+This will return 25 comments containing the term "science" but only from the /r/askscience subreddit.  Since we didn't ask for a specific sort method, the most recent comments are returned (the sort parameter defaults to "desc").  What if we wanted the first comment ever to /r/askscience that mentioned the word "science"?  We could use the sort and limit parameters to handle that.
 
 **Search for the most recent comments mentioning the word "science" within the subreddit /r/askscience**
 
-https://api.pushshift.io/reddit/search/comment/?q=science&subreddit=askscience&sort=asc&size=1
+https://api.pushshift.io/reddit/search/comment/?q=science&subreddit=askscience&sort=asc&limit=1
 
 This is the result:
 
@@ -136,15 +136,15 @@ Here is an example using the fields parameter to search for the past 150 comment
 
 **Search all subreddits for the term "government" and return comments with only the body and author keys**
 
-https://api.pushshift.io/reddit/search/comment/?q=government&size=150&fields=body,author
+https://api.pushshift.io/reddit/search/comment/?q=government&limit=150&fields=body,author
 
 ## Using the author parameter
 
-Using one of the examples above that searched for the first occurrence of the word "science" in the subreddit /r/askscience, we saw that the author of the comment was "MockDeath."  What if we wanted to get the first 100 comments that "MockDeath" made to Reddit?  We can use the author parameter, along with the sort and size parameters.
+Using one of the examples above that searched for the first occurrence of the word "science" in the subreddit /r/askscience, we saw that the author of the comment was "MockDeath."  What if we wanted to get the first 100 comments that "MockDeath" made to Reddit?  We can use the author parameter, along with the sort and limit parameters.
 
 **Search all subreddits and get the first 100 comments ever made by the user /u/MockDeath**
 
-https://api.pushshift.io/reddit/search/comment/?author=MockDeath&sort=asc&size=100
+https://api.pushshift.io/reddit/search/comment/?author=MockDeath&sort=asc&limit=100
 
 # Using the aggs parameter
 
@@ -156,9 +156,9 @@ Let's say we wanted to see the frequency of usage for the term "Trump" over time
 
 **Create a time aggregation using the term trump to show the number of comments mentioning trump each hour over the past 7 days**
 
-https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=created_utc&frequency=hour&size=0
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=created_utc&frequency=hour&limit=0
 
-We used the frequency parameter along with the aggs parameter to create hourly buckets to show the total number of comments mentioning Trump over the past 7 days.  The size parameter was set to 0 because we are only interested in getting aggregation data and not comment data.  The aggregation data is returned in the response under the key aggs -> created_utc.  Here is a snippet of the first part of the return:
+We used the frequency parameter along with the aggs parameter to create hourly buckets to show the total number of comments mentioning Trump over the past 7 days.  The limit parameter was set to 0 because we are only interested in getting aggregation data and not comment data.  The aggregation data is returned in the response under the key aggs -> created_utc.  Here is a snippet of the first part of the return:
 
 ```
 {
@@ -186,7 +186,7 @@ What if you wanted to not only get the frequency of specific comment terms over 
 
 **Create a subreddit aggregation using the term trump to show the top subreddits mentioning trump over the past 7 days**
 
-https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=subreddit&size=0
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=7d&aggs=subreddit&limit=0
 
 Here is a snippet of the result:
 
@@ -222,7 +222,7 @@ The API also allows aggregations on link_id, which is another very powerful meth
 
 **Show submissions made within the past 24 hours that mention trump often in the comments**
 
-https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=link_id&size=0
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=link_id&limit=0
 
 This will return under the aggs -> link_id key an array of submission objects.  The doc_count gives the total number of comments for each submission that mention the search term ("trump") and the bg_count give the total number of comments made to that submission.  This is a great way to quickly find submissions that are "hot" based on a specific search term or phrase. 
 
@@ -232,7 +232,7 @@ The API also allows you to create aggregations on authors so you can quickly see
 
 **Show the top authors mentioning the term "Trump" over the past 24 hours**
 
-https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author&size=0
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author&limit=0
 
 ```
 {
@@ -264,7 +264,7 @@ Using the aggs parameter, you can combine multiple aggregations and get a lot of
 
 **Show aggregations for authors, submissions, subreddits and time frequency for the term "Trump" over the past 24 hours**
 
-https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author,link_id,subreddit,created_utc&frequency=hour&size=0
+https://api.pushshift.io/reddit/search/comment/?q=trump&after=24h&aggs=author,link_id,subreddit,created_utc&frequency=hour&limit=0
 
 -------------------------
 
@@ -276,7 +276,7 @@ To search for submissions, use the endpoint https://api.pushshift.io/reddit/sear
 
 https://api.pushshift.io/reddit/search/submission/?q=science
 
-This will search for the most recent submissions with the word science in the title or selftext.  The search is not case-sensitive, so it will find any occurence of science regardless of capitalization.  The API defaults to sorting by the most recently made submissions first.  After running this search, 25 results are returned.  This is the default size for searches and can be changed by using the size parameter.  This will be discussed in further detail in the parameters section.  Data is returned in JSON format and results are included in the "data" key. 
+This will search for the most recent submissions with the word science in the title or selftext.  The search is not case-sensitive, so it will find any occurence of science regardless of capitalization.  The API defaults to sorting by the most recently made submissions first.  After running this search, 100 results are returned.  This is the default size for searches and can be changed by using the limit parameter.  This will be discussed in further detail in the parameters section.  Data is returned in JSON format and results are included in the "data" key. 
 
 # Search parameters for submissions
 
@@ -291,7 +291,7 @@ There are numerous additional parameters that can be used when performing a subm
 | title:not | Exclude search term from title.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | selftext | Searches the selftext field only | N/A | String / Quoted String for phrases |
 | selftext:not | Exclude search term from selftext.  Will exclude these terms | N/A | String / Quoted String for phrases |
-| size | Number of results to return | 25 | Integer <= 500 |
+| limit | Number of results to return | 100 | Integer <= 10000 |
 | fields | One return specific fields (comma delimited) | All Fields | String or comma-delimited string (Multiple values allowed) |
 | sort | Sort results in a specific order | "desc" | "asc", "desc"
 | sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
