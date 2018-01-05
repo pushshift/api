@@ -21,7 +21,7 @@ class search:
             resp.context["data"] = data
             return
 
-        response = self.search("http://localhost:9200/rs/submission/_search");
+        response = self.search("http://localhost:9200/rr/subreddit/_search");
         #print(response)
         hits = {}
         data = {}
@@ -48,8 +48,6 @@ class search:
                 else:
                     source[attr] = None
 
-            if source["permalink"]:
-                source["full_link"] = "https://www.reddit.com" + source["permalink"]
 
             if 'fields' in self.pp:
                 if isinstance(self.pp['fields'], str):
@@ -157,11 +155,11 @@ class search:
         if 'q' in self.pp and self.pp['q'] is not None:
             sqs = nested_dict()
             sqs['simple_query_string']['query'] = self.pp['q']
-            sqs['simple_query_string']['fields'] = ["title^5","selftext^2"]
+            sqs['simple_query_string']['fields'] = ["title^5","header_title^4","public_description^3","description^2"]
             sqs['simple_query_string']['default_operator'] = 'and'
             self.es['query']['bool']['filter']['bool']['must'].append(sqs)
 
-        conditions = ["title","selftext"]
+        conditions = ["title","description","public_description","header_title"]
         for condition in conditions:
             if condition in self.pp and self.pp[condition] is not None:
                 sqs = nested_dict()
@@ -291,7 +289,7 @@ class search:
         self.es["query"]["terms"]["id"] = ids_to_fetch
         self.es["size"] = 500
         q["query"]["ids"]["values"] = ids_to_fetch
-        response = requests.get("http://localhost:9200/rs/submission/_search", data=json.dumps(q))
+        response = requests.get("http://localhost:9200/rr/subreddit/_search", data=json.dumps(q))
         s = json.loads(response.text)
         results = []
         for hit in s["hits"]["hits"]:

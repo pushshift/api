@@ -9,6 +9,8 @@ from pprint import pprint
 def process(params):
     nested_dict = lambda: defaultdict(nested_dict)
     q = nested_dict()
+    if 'track_total_hits' in params and params['track_total_hits'].lower() == "false":
+        q['track_total_hits'] = False
     q['query']['bool']['filter']['bool']['must'] = []
     q['query']['bool']['filter']['bool']['should'] = []
     q['query']['bool']['must_not'] = []
@@ -21,7 +23,7 @@ def process(params):
             params['link_id'] = params['link_id'][3:]
         params['link_id'] = str(int(params['link_id'],36))
 
-    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class"]
+    conditions = ["subreddit","author","domain","link_id","subreddit_type","user_removed","mod_removed","url","link_flair_text","link_flair_css_class","display_name","distinguished"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
@@ -30,8 +32,6 @@ def process(params):
             param_values = [x.lower() for x in params[condition]]
             # Need to make this a function for when users request to be removed from API
             print(condition)
-            if condition == "author":
-                while 'bilbo-t-baggins' in param_values: param_values.remove('bilbo-t-baggins')
             terms = nested_dict()
             if params[condition][0][0] == "!":
                 terms['terms'][condition] = list(map(lambda x:x.replace("!",""),param_values))
@@ -91,7 +91,7 @@ def process(params):
         params['before'] = None
 
     # Handle parameters that are range parameters (less than, greater than, equal to, etc.)
-    conditions = ["reply_delay","score","num_comments","num_crossposts","nest_level"]
+    conditions = ["reply_delay","score","num_comments","num_crossposts","nest_level","edited","gilded","parent_id","length","day_of_week"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])
@@ -109,7 +109,7 @@ def process(params):
                 q['query']['bool']['filter']['bool']['must'].append(range)
 
     # Handle boolean type conditions
-    conditions = ["is_self","over_18","is_video","stickied","spoiler","locked","contest_mode","is_crosspostable","brand_safe"]
+    conditions = ["has_quote","is_self","over_18","is_video","stickied","spoiler","locked","contest_mode","is_crosspostable","brand_safe","over18"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             parameter = nested_dict()

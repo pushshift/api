@@ -14,6 +14,7 @@ from inspect import getmembers
 from collections import defaultdict
 import Submission
 import Comment
+import Subreddit
 import User
 import Test
 import Parameters
@@ -76,7 +77,10 @@ class CreateReply:
         else:
             resp.context['data'].pop('metadata',None)
 
-        resp.body = json.dumps(resp.context['data'],sort_keys=True,indent=4, separators=(',', ': '))
+        if 'pretty' in req.context['processed_parameters']:
+            resp.body = json.dumps(resp.context['data'],sort_keys=True,indent=4, separators=(',', ': '))
+        else:
+            resp.body = json.dumps(resp.context['data'])
 
 class Middleware(object):
     def process_request(self, req, resp):
@@ -113,6 +117,8 @@ class Middleware(object):
 
 api = falcon.API(middleware=[PreProcessing(),CreateReply()])
 api.req_options.keep_blank_qs_values = True
+api.add_route('/reddit/subreddit/search', Subreddit.search())
+api.add_route('/reddit/search/subreddit', Subreddit.search())
 api.add_route('/reddit/search', Comment.search())
 api.add_route('/reddit/comment/search', Comment.search())
 api.add_route('/reddit/search/comment', Comment.search())

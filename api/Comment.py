@@ -119,6 +119,7 @@ class search:
             # ----
 
         response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
+        print(response)
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
@@ -132,6 +133,9 @@ class search:
                 source["parent_id"] = source["link_id"]
 
             source["subreddit_id"] = "t5_" + base36encode(source["subreddit_id"])
+
+            if 'distinguished' not in source:
+                source["distinguished"] = None
 
             if 'author_flair_text' in source:
                 source["author_flair_text"] = html.unescape(source["author_flair_text"])
@@ -168,7 +172,7 @@ class search:
                 newlist = response["data"]["aggregations"]["author"]["buckets"]
                 data["aggs"]["author"] = newlist
 
-            for k in ["author_flair_text","author_flair_css_class"]:
+            for k in ["author_flair_text","author_flair_css_class","utc_hour","day_of_week"]:
                 if k in response["data"]["aggregations"]:
                     for bucket in response["data"]["aggregations"][k]["buckets"]:
                         bucket.pop('key_as_string', None)
@@ -193,6 +197,7 @@ class search:
                     after = int(self.pp["after"])
                 for item in response["data"]["aggregations"]["link_id"]["buckets"]:
                     if item["key"] in submission_data and submission_data[item["key"]]["created_utc"] > after:
+                        print("Got here")
                         item["data"] = submission_data[item["key"]]
                         item["data"]["full_link"] = "https://www.reddit.com" + item["data"]["permalink"]
                         newlist.append(item)
@@ -247,6 +252,17 @@ class search:
                     self.es['aggs']['author']['terms']['size'] = 500
                     self.es['aggs']['author']['terms']['order']['_count'] = 'desc'
 
+
+                if agg.lower() == 'utc_hour':
+                    self.es['aggs']['utc_hour']['terms']['field'] = 'utc_hour'
+                    self.es['aggs']['utc_hour']['terms']['size'] = 24
+                    self.es['aggs']['utc_hour']['terms']['order']['_key'] = 'asc'
+
+                if agg.lower() == 'day_of_week':
+                    self.es['aggs']['day_of_week']['terms']['field'] = 'day_of_week'
+                    self.es['aggs']['day_of_week']['terms']['size'] = 24
+                    self.es['aggs']['day_of_week']['terms']['order']['_key'] = 'asc'
+
                 if agg.lower() == 'created_utc':
                     self.es['aggs']['created_utc']['date_histogram']['field'] = "created_utc"
                     if 'frequency' not in self.pp or self.pp['frequency'] is None:
@@ -261,6 +277,7 @@ class search:
 
         response = None
         try:
+            print(json.dumps(self.es))
             response = requests.get(uri, data=json.dumps(self.es), headers={'Content-Type': 'application/json'})
         except requests.exceptions.RequestException as e:
             response = requests.get("http://localhost:9200/rc/comments/_search", data=json.dumps(self.es))
