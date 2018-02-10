@@ -317,18 +317,25 @@ class search:
 class getCommentIDs:
 
     def on_get(self, req, resp, submission_id):
+        nested_dict = lambda: defaultdict(nested_dict)
+        q = nested_dict()
         submission_id = submission_id.lower()
         if submission_id[:3] == 't3_':
             submission_id = submission_id[3:]
         submission_id = base36decode(submission_id)
-        #rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
-        results = []
+        print(submission_id)
+        q["_source"] = "id"
+        q["size"] = 10000
+        q["query"]["match"]["link_id"] = submission_id
+        q["sort"]["id"]["order"] = "asc"
+        response = requests.get("http://localhost:9200/rc/comment/_search", data=json.dumps(q), headers={'Content-Type': 'application/json'})
+        es_data = json.loads(response.text)
+        ids = []
         data = {}
-        if rows:
-            for row in rows:
-                comment_id = row[0]
-                results.append(base36encode(comment_id))
-        data['data'] = results
+        if 'hits' in es_data and 'hits' in es_data['hits']:
+            for hit in es_data['hits']['hits']:
+                ids.append(base36encode(int(hit['_id'])))
+        data['data'] = ids
         resp.context['data'] = data
 
 class timeLine:

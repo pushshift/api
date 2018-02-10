@@ -31,7 +31,6 @@ def process(params):
                 params[condition] = params[condition].split(",")
             param_values = [x.lower() for x in params[condition]]
             # Need to make this a function for when users request to be removed from API
-            print(condition)
             terms = nested_dict()
             if params[condition][0][0] == "!":
                 terms['terms'][condition] = list(map(lambda x:x.replace("!",""),param_values))
@@ -91,7 +90,7 @@ def process(params):
         params['before'] = None
 
     # Handle parameters that are range parameters (less than, greater than, equal to, etc.)
-    conditions = ["reply_delay","score","num_comments","num_crossposts","nest_level","edited","gilded","parent_id","length","day_of_week"]
+    conditions = ["reply_delay","score","num_comments","num_crossposts","nest_level","edited","gilded","parent_id","length","utc_hour_of_week"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             params[condition] = uri.decode(params[condition])

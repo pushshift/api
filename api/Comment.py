@@ -119,7 +119,6 @@ class search:
             # ----
 
         response = self.search("http://localhost:9200/" + self.pp['index'] + "/comment/_search")
-        print(response)
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
@@ -197,7 +196,6 @@ class search:
                     after = int(self.pp["after"])
                 for item in response["data"]["aggregations"]["link_id"]["buckets"]:
                     if item["key"] in submission_data and submission_data[item["key"]]["created_utc"] > after:
-                        print("Got here")
                         item["data"] = submission_data[item["key"]]
                         item["data"]["full_link"] = "https://www.reddit.com" + item["data"]["permalink"]
                         newlist.append(item)
@@ -277,7 +275,6 @@ class search:
 
         response = None
         try:
-            print(json.dumps(self.es))
             response = requests.get(uri, data=json.dumps(self.es), headers={'Content-Type': 'application/json'})
         except requests.exceptions.RequestException as e:
             response = requests.get("http://localhost:9200/rc/comments/_search", data=json.dumps(self.es))
