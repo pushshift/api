@@ -1,49 +1,257 @@
-# Pushshift Reddit API Documentation
+# Pushshift Reddit API v4.0 Documentation
 
 # Preface
 
-The pushshift.io Reddit API was designed and created by the /r/datasets mod team to help provide enhanced functionality and search capabilities for searching Reddit comments and submissions.  The project lead, /u/stuck_in_the_matrix, is the maintainer of the Reddit comment and submissions archives located at https://files.pushshift.io.  
+The pushshift.io Reddit API was designed and created by the /r/datasets mod team to help provide enhanced functionality and search capabilities for searching Reddit comments and submissions.  The project lead, /u/stuck_in_the_matrix, is the maintainer of the Reddit comment and submissions archives located at https://files.pushshift.io and lead architect for the Pushshift API project.
 
-This RESTful API gives full functionality for searching Reddit data and also includes the capability of creating powerful data aggregations.  With this API, you can quickly find the data that you are interested in and find fascinating correlations.  
+# What is the purpose of this API?
+The goal of this project is to provide a feature-rich API for searching Reddit comments and submissions and to give the ability to aggregrate the data in various ways to make interesting discoveries within the data.  This RESTful API gives full functionality for searching Reddit data.  With this API, you can quickly find the data that you are interested in and discover interesting correlations within the data.
+
+# How many objects are indexed on the back-end?
+
+There are over **four billion** comments and submissions available via the search API.  
 
 # Understanding the API
 
-There are two main ways of accessing the Reddit comment and submission database.  One is by using the API directly via https://api.pushshift.io/ and the other is through accessing the back-end Elasticsearch search engine via https://elastic.pushshift.io/  This document will explain both approaches and give examples on how to effectively use the API.  This document will also explore the use of the API parameters to utilize more focused searches.
+There are two main ways of accessing the Reddit comment and submission database.  One is by using the API directly via https://api.pushshift.io/ and the other is through accessing the back-end Elasticsearch search engine via https://elastic.pushshift.io/  This document will focus on the first method and give a broad overview of all the parameters available when conducting a search.  This document will also explore the use of more advanced API parameters to utilize more focused searches.
 
 # Using the https://api.pushshift.io endpoints
 
 There are two main endpoints used to search all publicly available comments and submissions on Reddit:
 
-* /reddit/search/comment
-* /reddit/search/submission
+* https://api.pushshift.io/reddit/comment/search
+* https://api.pushshift.io/reddit/submission/search
 
 In the next section, we will explore how to perform more effective searches using the comment search endpoint.
 
-# Searching Comments
+# Comments Search
 
-To search for comments, use the https://api.pushshift.io/reddit/search/comment/ endpoint.  Let's start with a few examples and then go over the various parameters available when using this endpoint.  One of the simplest searches is using just the q parameter.  The q parameter is used to search for a specific word or phrase.  Here is an example:
+To search comments, use the https://api.pushshift.io/reddit/comment/search endpoint.  Let's start with a few examples and then go over the various parameters available when using this endpoint.  One of the simplest searches is using just the q parameter.  The q parameter is used to search for a specific word or phrase.  Here is an example:
 
 **Search for the most recent comments mentioning the word "science"**
 
-https://api.pushshift.io/reddit/search/comment/?q=science
+https://api.pushshift.io/reddit/comment/search/?q=science
 
 This will search the most recent comments with the term "science" in the body of the comment.  This search is not case-sensitive, so it will find any occurence of the term "science" regardless of capitalization.  The API defaults to sorting by recently made comments first.  After performing this search, 25 results are returned.  This is the default size for searches and can be adjusted using the size parameter.  This will be discussed in further detail in the parameters section.  Data is returned in JSON format and actual search results are included in the "data" key.  There is also a "metadata" key that gives additional information about the search including total number of results found, how long the search took to process, etc.  If aggregations are requested, all aggregation data is returned under the aggs key.
+
+# Comment Search Parameters
+
+## Time based Parameters
+
+### after
+
+The "after" parameter allows you to restrict the comments returned from a search by epoch time. This parameter also supports some convenience methods via abbreviations for time. If you use an epoch time for the value of the "after" parameter, it will return all comments with a created_utc epoch time greater than that value. You can also use abbreviations such as 24h (24 hours), 90s (90 seconds), 7d (7 days), etc. As an example, if you wanted to return all comments containing the term "quantum" that were made in the past 24 hours, you would make the following API call:
+
+https://api.pushshift.io/reddit/comment/search/?q=quantum&after=24h
+
+### before
+
+The "before" parameter works exactly like the after parameter, except it will return comments made before the epoch time given. Also, like the "after" parameter, it accepts abbreviated values for time. As an example, if you wanted to search for comments containing the term "universe" that were at least 30 days old, you would make the following API call:
+
+https://api.pushshift.io/reddit/comment/search/?q=universe&before=30d
+
+### reply_delay
+
+The "reply_delay" can be used to search comments by the amount of time that elaspsed before the comment reply was made. For instance, if a comment is made at 3:00:00 pm and a reply to that comment was made at 3:01:53 pm, a total of 113 seconds elasped before the reply was made. Using the reply_delay parameter, you can find comments that were made within X second to the parent comment (or submission if the comment is a top level comment). This parameter is excellent for finding bot-like activity on Reddit. As an example, let's say you are a moderator of /r/politics and you want to see what bots are active in your subreddit over the past 24 hours. Using the "reply_delay" parameter along with the "subreddit" and "after" parameter will allow you to see bot-like activity. Usually, most bots will reply within 30 seconds to the parent object (comment or submission).
+
+Here is an example call to the API using the above scenario. This API call will show comments that were made in less than 30 seconds over the past 24 hours to the subreddit /r/politics:
+
+https://api.pushshift.io/reddit/comment/search/?subreddit=politics&reply_delay=%3C30&after=24h
+
+This is especially powerful when used in tandem with the "aggs" parameter with a value of "subreddit":
+
+https://api.pushshift.io/reddit/comment/search/?subreddit=politics&reply_delay=%3C30&after=24h&aggs=author&size=0
+
+### utc_hour_of_week
+
+The "utc_hour_of_week" parameter is a parameter that is primarily meant as an aggregation method to show comment volume by hour of week (so that you could track trends and see when subreddits or specific authors were most active). The parameter itself can be used directly to limit comments by a specific hour of the week as well. The range is from 0 to 168 with 0 being midnight on Monday and 168 being the 23'rd hour of Sunday night.
+
+### utc_hour_of_day
+
+The "utc_hour_of_day" parameter is a parameter that is primarily meant as an aggregation method to show comment volume over the course of a day. When using this parameter as an aggregation type, it shows when a subreddit or author is move active throughout a typical day.
+
+## Filter Parameters
+
+### size
+
+The "size" parameter limits the number of objects returned within the data array.  The parameter accepts an integer up to 500. This parameter is associated with the data array only and does not influence the number of results under aggregations when using the "aggs" parameter. Reference the "agg_size" parameter for limiting the size of aggregation results instead.
+
+As a quick example, if you wanted to retrieve 25 comments that contained the term "universe," you would make the following API call:
+
+https://api.pushshift.io/reddit/comment/search/?q=universe&size=25
+
+### filter
+
+The "filter" parameter is used to limit the amount of information returned within objects contained in the data array. Let's say you wanted to do a comment search for the term "denver" and you only needed the author, score and subreddit fields. Using filter, you could restrict the API and only return those fields. This is an example using the filter parameter using the previous example:
+
+https://api.pushshift.io/reddit/comment/search/?q=denver&filter=author,score,subreddit
+
+### sort
+
+The "sort" parameter is used to sort results based on a given key. For comments, generally one would want to sort by the comment creation date or the comment scores. To use the sort parameter, you would specify the key used for the sort and then a colon and then the sort order using either "asc" or "desc". The following example does a search for "patriots" within the subreddit "nfl" and sorts the results by score descending (showing comments with the highest score):
+
+https://api.pushshift.io/reddit/comment/search/?q=patriots&subreddit=nfl&sort=score:desc
+
+### length
+
+The "length" parameter allows for restricting the results to comments above or below a certain character length.  This is helpful for excluding short comments when searching for comments with more substance, etc. When using this parameter, simply set the value to specific length or use the "<" or ">" characters to select comments less than or greater than a certain length. For example, if you wanted to find comments in the subreddit "askhistorians" with a length greater than 500 characters, you could make an API call like this:
+
+https://api.pushshift.io/reddit/comment/search/?subreddit=askhistorians&length=%3E500
+
+### user_removed
+
+A boolean parameter that is true if a user removed their own comment.
+
+### mod_removed
+
+A boolean parameter that is true if a moderator removed a user's comment.
+
+### nest_level
+
+The nest level of a comment. A top level comment will have a nest level of 1. A comment that is a reply to a top level comment will have a nest level of 2 and so on.
+
+
+## Comment Attribute Parameters
+
+### q
+
+This parameter will return comments matching the keyword or phrase matching the parameter value. The value can be a simple term or a complex phrase and is case-insensitive.  For example, to find comments that mention the band Radiohead, one would make the following API call:
+
+https://api.pushshift.io/reddit/comment/search/?q=radiohead
+
+This parameter accepts many different options that can help narrow down the search to find specific comments.  Here are some examples that show various ways to maximize the utility of this parameter when searching for specific comments.
+
+#### Multiple terms (AND operation)
+
+To find comments that match two different words, seperate the words using a "+" sign.  The following would return comments containing the term "Radiohead" and the term "band":
+
+https://api.pushshift.io/reddit/comment/search/?q=radiohead+band
+
+#### Multiple terms (OR operation)
+
+To find comments that match either of two different words, seperate the words using a "|" sign.  The following would return comments containing the term "Radiohead" or the term "Nirvana":
+
+https://api.pushshift.io/reddit/comment/search/?q=radiohead|nirvana
+
+#### Negation
+
+To find comments that match one word but not another word, use a "-" before the word you wish to exclude.  For example, the following would return comments containing the term "Radiohead" but not the word music:
+
+https://api.pushshift.io/reddit/comment/search/?q=radiohead-music
+
+#### Exact Phrase
+
+If you wanted to find an exact phrase, you can put the phrase in quotation marks. The following example will find comments that contain the phrase "band radiohead":
+
+https://api.pushshift.io/reddit/comment/search/?q="band%20radiohead"
+
+#### Complex Combinations
+
+You can combine many of the previous types of operations and group them using parentheses to create advanced options for searching. As a more complicated example, let's say you wanted to search for comments containing "Nirvana" or "Music" but not the word "songs" or "group":
+
+https://api.pushshift.io/reddit/comment/search/?q=(Nirvana|Music)-(songs+group)
+
+### author
+
+This parameter will restrict the search to specific Reddit authors.  Every Reddit comment has an author which means you can restrict your search results to specific people. 
+
+#### Inclusive search
+
+To find comments by one author, simply set the value of the author parameter to that author's name. The field is not case-sensitive and allows you to include multiple authors seperated by a comma. This example will find comments by the author "spez" or "automoderator":
+
+https://api.pushshift.io/reddit/comment/search/?author=spez,automoderator
+
+#### Exclusive search
+
+You can also use this parameter to return all comments *not* made by specific authors. Using the previous example, if you wanted to return all comments that were not made by automoderator or spez, you would put a "!" before the name. Example:
+
+https://api.pushshift.io/reddit/comment/search/?author=!automoderator,!spez
+
+### author_flair_css_class
+
+Parameter to filter comments based on the author's flair css class.
+
+### author_flair_text
+
+Parameter to filter comments based on the author's flair text.
+
+### subreddit
+
+This parameter will restrict the search to specific subreddits.  Every Reddit comment is associated with a submission which is associated with a subreddit.
+
+#### Inclusive search
+
+To find comments within a subreddit or multiple subreddits, set the value of the subreddit parameter to the subreddit(s) that you are interested in. This field is not case-sensitive and allows you to include multiple subreddits seperated by a comma. This example will find comments within the subreddit askscience:
+
+https://api.pushshift.io/reddit/comment/search/?subreddit=askscience
+
+#### Exclusive search
+
+You can also use this parameter to return all comments *not* within a subreddit or multiple subreddits. Using the previous example, if you wanted to return all comments that were not made within askscience, you would put a "!" before the subreddit name. Example:
+
+https://api.pushshift.io/reddit/comment/search/?subreddit=!askscience
+
+### score
+
+The score parameter allows you to search for comments with a specific score or range of scores. This parameter is helpful in finding higher quality comments (although a high score comment isn't necessarily always a quality comment). As an example, this API call will find comments with the term "boston" with a score greater than 500:
+
+https://api.pushshift.io/reddit/comment/search/?q=boston&score=%3E500
+
+### gilded
+
+Like the score parameter, this allows you to search for comments with a certain amount of gildings. To find a comment that contains the term "amazing" and has been gilded (no matter how many times), you would make the following API call:
+
+https://api.pushshift.io/reddit/comment/search/?q=amazing&gilded=%3E0
+
+You could also search comments and sort by the gilded parameter to return comments with many gildings  ranked in descending order:
+
+https://api.pushshift.io/reddit/comment/search/?q=amazing&sort=gilded:desc
+
+### distinguished
+
+Parameter to retreieve comments based on the type of user ("moderator", "admin", etc.)
+
+### id
+
+Parameter to retrieve specific comments by their id.
+
+### link_id
+
+Parameter to retrieve comments within a specific submission.
+
+### edited
+
+A boolean parameter that is true if a user made an edit to their comment.
+
+### parent_id
+
+A parameter that gives the parent id of a comment (which could be another comment or a submission if the comment is a top level comment).
+
+
+## Aggregation Parameters
+
+### agg
+
+The agg parameter is used to create aggregations.  (This needs to be expanded ...)
+
+
+
+
 
 # Search parameters for comments
 
 There are numerous additional parameters that can be used when performing a comment search.  Let's go over them and provide examples for each.
 
-| Parameter | Description | Default | Accepted Values | 
-| ------ | ------ | ------- | ------ |
-| q | Search term. | N/A | String / Quoted String for phrases |
-| ids | Get specific comments via their ids | N/A | Comma-delimited base36 ids |
-| size | Number of results to return | 25 | Integer <= 500
-| fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
-| sort | Sort results in a specific order | "desc" | "asc", "desc"
-| sort_type | Sort by a specific attribute | "created_utc" | "score", "created_utc"
-| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
-| author | Restrict to a specific author | N/A | String
-| subreddit | Restrict to a specific subreddit | N/A | String
+| Parameter | Description | Accepted Values | Example Usage |
+| ------ | ------ | ------ | ------ |
+| q | Search term or phrase | String / Quoted String for phrases | q=radiohead
+| ids | Get specific comments via their ids | Comma-delimited base36 ids | ids=ce231,ce232,ce233
+| size | Number of results to return within the data array | 0 to 500 (Int) | size=100
+| fields | Only return specific fields under the data array | comma-delimited string | fields=subreddit,author
+| sort | Sort results using a specific key (key:direction where direction is "asc" or "desc")  | sortable key:"asc" or "desc" | sort=score:desc
+| aggs | Return aggregation(s) summary | author, link_id, created_utc, subreddit | aggs=link_id,author
+| author | Restrict to a specific author(s) | Comma-delimited string | author=david,billy,tom (only include these authors)
+| subreddit | Restrict to a specific subreddit(s) | Comma-delimited string | subreddit=askscience,science
 | after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
 | before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
 | frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
@@ -337,12 +545,3 @@ https://api.pushshift.io/reddit/submission/comment_ids/6uey5x
 
 
 # To be continued (Currently under active development) ...
-
-
-
-
-
-
-
-
-
