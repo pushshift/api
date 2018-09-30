@@ -63,6 +63,16 @@ def process(params,q):
         elif LooksLikeInt(params['score']):
             range['term']['score'] = int(params['score'])
         q['query']['bool']['filter'].append(range)
+        
+    if 'ups' in params and params['score'] is not None:
+        range = nested_dict()
+        if params['score'][:1] == "<":
+            range['range']['score']['lt'] = int(params['score'][1:])
+        elif params['score'][:1] == ">":
+            range['range']['score']['gt'] = int(params['score'][1:])
+        elif LooksLikeInt(params['score']):
+            range['term']['score'] = int(params['score'])
+        q['query']['bool']['filter'].append(range)
 
     if 'num_comments' in params and params['num_comments'] is not None:
         range = nested_dict()
