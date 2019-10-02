@@ -33,20 +33,21 @@ This will search the most recent comments with the term "science" in the body of
 
 There are numerous additional parameters that can be used when performing a comment search.  Let's go over them and provide examples for each.
 
-| Parameter | Description | Default | Accepted Values | 
+| Parameter | Description | Default | Accepted Values |
 | ------ | ------ | ------- | ------ |
 | q | Search term. | N/A | String / Quoted String for phrases |
 | ids | Get specific comments via their ids | N/A | Comma-delimited base36 ids |
-| size | Number of results to return | 25 | Integer <= 500
-| fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string
-| sort | Sort results in a specific order | "desc" | "asc", "desc"
-| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
-| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
-| author | Restrict to a specific author | N/A | String
-| subreddit | Restrict to a specific subreddit | N/A | String
-| after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
-| before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days)
-| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day"
+| size | Number of results to return | 25 | Integer <= 500 |
+| fields | One return specific fields (comma delimited) | All Fields Returned | string or comma-delimited string |
+| sort | Sort results in a specific order | "desc" | "asc", "desc" |
+| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc" |
+| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"] |
+| author | Restrict to a specific author | N/A | String |
+| subreddit | Restrict to a specific subreddit | N/A | String |
+| after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days) |
+| before | Return results before this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days) |
+| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" |
+| metadata | display metadata about the query | false | "true", "false" |
 
 ## Getting comments based on id
 
@@ -282,8 +283,8 @@ This will search for the most recent submissions with the word science in the ti
 
 There are numerous additional parameters that can be used when performing a submission search.  Let's go over each of them now and provide examples for each one.
 
-| Parameter | Description | Default | Accepted Values | 
-| ------ | ------ | ------- | ------ |
+| Parameter | Description | Default | Accepted Values |
+| ----- | ----- | ----- | ----- |
 | ids | Get specific submissions via their ids | N/A | Comma-delimited base36 ids |
 | q | Search term. Will search ALL possible fields | N/A | String / Quoted String for phrases |
 | q:not | Exclude search term.  Will exclude these terms | N/A | String / Quoted String for phrases |
@@ -293,9 +294,9 @@ There are numerous additional parameters that can be used when performing a subm
 | selftext:not | Exclude search term from selftext.  Will exclude these terms | N/A | String / Quoted String for phrases |
 | size | Number of results to return | 25 | Integer <= 500 |
 | fields | One return specific fields (comma delimited) | All Fields | String or comma-delimited string (Multiple values allowed) |
-| sort | Sort results in a specific order | "desc" | "asc", "desc"
-| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc"
-| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"]
+| sort | Sort results in a specific order | "desc" | "asc", "desc" |
+| sort_type | Sort by a specific attribute | "created_utc" | "score", "num_comments", "created_utc" |
+| aggs | Return aggregation summary | N/A | ["author", "link_id", "created_utc", "subreddit"] |
 | author | Restrict to a specific author | N/A | String or comma-delimited string (Multiple values allowed) |
 | subreddit | Restrict to a specific subreddit | N/A | String or comma-delimited string (Multiple values allowed) |
 | after | Return results after this date | N/A | Epoch value or Integer + "s,m,h,d" (i.e. 30d for 30 days) |
@@ -307,8 +308,9 @@ There are numerous additional parameters that can be used when performing a subm
 | locked | Return locked or unlocked threads only | both allowed | "true" or "false" |
 | stickied | Return stickied or unstickied content only | both allowed | "true" or "false" |
 | spoiler | Exclude or include spoilers only | both allowed | "true" or "false" |
-| contest_mode | Exclude or include content mode submissions | both allowed | "true" or "false" | 
-| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" | 
+| contest_mode | Exclude or include content mode submissions | both allowed | "true" or "false" |
+| frequency | Used with the aggs parameter when set to created_utc | N/A | "second", "minute", "hour", "day" |
+| metadata | display metadata about the query | false | ["true", "false"] |
 
 ## Get all comment ids for a particular submission
 
@@ -320,29 +322,19 @@ This call will return a data key with an array of comment ids.  You can then ret
 
 https://api.pushshift.io/reddit/submission/comment_ids/6uey5x
 
-
 ----------------------
 # List of Endpoints
 
 | Endpoint | Description | Status | 
 | ------ | ------ | ------- |
-| /reddit/search/comment/ | Search Reddit Comments | Active
-| /reddit/search/submission/ | Search Reddit Submissions | Active
-| /reddit/submission/comment_ids/{base36-submission-id} | Retrieve comment ids for a submission object | Active
-| /reddit/analyze/user/{author-name} | Analyze a Reddit user's activity | In Development
-| /reddit/term/frequency/{term} | Analyze a term based on activity |  In Development
-| /reddit/search/all/ | Search Both Comment and Submissions | In Development
-| /reddit/trending/people | Find out who is trending on Reddit | In Development
-| /reddit/search/links | Find relevent links being shared on Reddit | In Development
+| /reddit/search/comment/ | Search Reddit Comments | Active |
+| /reddit/search/submission/ | Search Reddit Submissions | Active |
+| /reddit/submission/comment_ids/{base36-submission-id} | Retrieve comment ids for a submission object | Active |
+| /reddit/analyze/user/{author-name} | Analyze a Reddit user's activity | In Development |
+| /reddit/term/frequency/{term} | Analyze a term based on activity |  In Development |
+| /reddit/search/all/ | Search Both Comment and Submissions | In Development |
+| /reddit/trending/people | Find out who is trending on Reddit | In Development |
+| /reddit/search/links | Find relevent links being shared on Reddit | In Development |
 
 
 # To be continued (Currently under active development) ...
-
-
-
-
-
-
-
-
-
