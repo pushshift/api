@@ -4,12 +4,13 @@ import requests
 import json
 import time
 
-def process(params,q):
-    nested_dict = lambda: defaultdict(nested_dict)
-    params = {k.lower(): v for k, v in params.items()} # Lowercase all parameter names passed
-    suggested_sort = "desc";
 
-    conditions = ["subreddit","author"]
+def process(params, q):
+    nested_dict = lambda: defaultdict(nested_dict)
+    params = {k.lower(): v for k, v in params.items()}  # Lowercase all parameter names passed
+    suggested_sort = "desc"
+
+    conditions = ["subreddit", "author"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             terms = nested_dict()
@@ -108,13 +109,13 @@ def process(params,q):
             range['term']['num_comments'] = int(params['num_comments'])
         q['query']['bool']['filter'].append(range)
 
-    conditions = ["over_18","is_video","stickied","spoiler","locked","contest_mode"]
+    conditions = ["over_18", "is_video", "stickied", "spoiler", "locked", "contest_mode"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             parameter = nested_dict()
             if params[condition].lower() == 'true' or params[condition] == "1":
-                parameter['term'][condition] = "true" 
-                print ("Got here")
+                parameter['term'][condition] = "true"
+                print("Got here")
             elif params[condition].lower() == 'false' or params[condition] == "0":
                 parameter['term'][condition] = "false"
             q['query']['bool']['filter'].append(parameter)
@@ -142,10 +143,9 @@ def process(params,q):
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
 
-    if 'frequency' in params and params['frequency'].lower() in ['second','minute','hour','day','week','month']:
+    if 'frequency' in params and params['frequency'].lower() in ['second', 'minute', 'hour', 'day', 'week', 'month']:
         params['frequency'] = params['frequency'].lower()
     else:
         params['frequency'] = None
 
-    return(params,q)
-
+    return (params, q)

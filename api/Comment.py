@@ -9,7 +9,7 @@ class search:
     params = None
     def on_get(self, req, resp):
         start = time.time()
-        q = req.get_param('q');
+        q = req.get_param('q')
         self.params = req.params
         if 'ids' in self.params:
             data = self.getIds(self.params['ids'])
