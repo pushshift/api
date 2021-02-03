@@ -100,7 +100,7 @@ class search:
 
 
         end = time.time()
-        data['data'] = results;
+        data['data'] = results
         data['metadata'] = {}
         data['metadata'] = response['metadata']
         data['metadata'] = self.params
