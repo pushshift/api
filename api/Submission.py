@@ -244,7 +244,7 @@ class getCommentIDs:
             for row in rows:
                 comment_id = row[0]
                 results.append(base36encode(comment_id))
-        data['data'] = results;
+        data['data'] = results
         resp.cache_control = ["public","max-age=5","s-maxage=5"]
         resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
 
