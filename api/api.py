@@ -19,7 +19,6 @@ import Parameters
 from Helpers import *
 from configparser import ConfigParser
 
-
 api = falcon.API()
 api.add_route('/reddit/search', Comment.search())
 api.add_route('/reddit/comment/search', Comment.search())
@@ -29,5 +28,3 @@ api.add_route('/reddit/submission/search', Submission.search())
 api.add_route('/reddit/analyze/user/{author}', User.Analyze())
 api.add_route('/get/comment_ids/{submission_id}', Submission.getCommentIDs())
 api.add_route('/reddit/submission/comment_ids/{submission_id}', Submission.getCommentIDs())
-
-

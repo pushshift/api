@@ -4,12 +4,13 @@ import requests
 import json
 import time
 
-def process(params,q):
-    nested_dict = lambda: defaultdict(nested_dict)
-    params = {k.lower(): v for k, v in params.items()} # Lowercase all parameter names passed
-    suggested_sort = "desc";
 
-    conditions = ["subreddit","author"]
+def process(params, q):
+    nested_dict = lambda: defaultdict(nested_dict)
+    params = {k.lower(): v for k, v in params.items()}  # Lowercase all parameter names passed
+    suggested_sort = "desc"
+
+    conditions = ["subreddit", "author"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             terms = nested_dict()
@@ -54,6 +55,40 @@ def process(params,q):
     else:
         params['before'] = None
 
+    if 'retrieved_before' in params and params['retrieved_before'] is not None:
+        if LooksLikeInt(params['retrieved_before']):
+            params['retrieved_before'] = int(params['retrieved_before'])
+        elif params['retrieved_before'][-1:].lower() == "d":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 86400)
+        elif params['retrieved_before'][-1:].lower() == "h":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 3600)
+        elif params['retrieved_before'][-1:].lower() == "m":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 60)
+        elif params['retrieved_before'][-1:].lower() == "s":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]))
+        range = nested_dict()
+        range['range']['retrieved_on']['lt'] = params['retrieved_before']
+        q['query']['bool']['filter'].append(range)
+    else:
+        params['retrieved_before'] = None
+
+    if 'retrieved_after' in params and params['retrieved_after'] is not None:
+        if LooksLikeInt(params['retrieved_after']):
+            params['retrieved_after'] = int(params['retrieved_after'])
+        elif params['retrieved_after'][-1:].lower() == "d":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 86400)
+        elif params['retrieved_after'][-1:].lower() == "h":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 3600)
+        elif params['retrieved_after'][-1:].lower() == "m":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 60)
+        elif params['retrieved_after'][-1:].lower() == "s":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]))
+        range = nested_dict()
+        range['range']['retrieved_on']['lt'] = params['retrieved_after']
+        q['query']['bool']['filter'].append(range)
+    else:
+        params['retrieved_after'] = None
+
     if 'score' in params and params['score'] is not None:
         range = nested_dict()
         if params['score'][:1] == "<":
@@ -74,13 +109,13 @@ def process(params,q):
             range['term']['num_comments'] = int(params['num_comments'])
         q['query']['bool']['filter'].append(range)
 
-    conditions = ["over_18","is_video","stickied","spoiler","locked","contest_mode"]
+    conditions = ["over_18", "is_video", "stickied", "spoiler", "locked", "contest_mode"]
     for condition in conditions:
         if condition in params and params[condition] is not None:
             parameter = nested_dict()
             if params[condition].lower() == 'true' or params[condition] == "1":
-                parameter['term'][condition] = "true" 
-                print ("Got here")
+                parameter['term'][condition] = "true"
+                print("Got here")
             elif params[condition].lower() == 'false' or params[condition] == "0":
                 parameter['term'][condition] = "false"
             q['query']['bool']['filter'].append(parameter)
@@ -108,10 +143,9 @@ def process(params,q):
         params['sort'] = suggested_sort
     q['sort'][params['sort_type']] = params['sort']
 
-    if 'frequency' in params and params['frequency'].lower() in ['second','minute','hour','day','week','month']:
+    if 'frequency' in params and params['frequency'].lower() in ['second', 'minute', 'hour', 'day', 'week', 'month']:
         params['frequency'] = params['frequency'].lower()
     else:
         params['frequency'] = None
 
-    return(params,q)
-
+    return (params, q)

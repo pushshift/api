@@ -3,12 +3,14 @@ import requests
 import json
 import DBFunctions
 
+
 def LooksLikeInt(s):
     try:
         int(s)
         return True
     except ValueError:
         return False
+
 
 def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
     """Converts an integer to a base36 string."""
@@ -31,8 +33,10 @@ def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
 
     return sign + base36
 
+
 def base36decode(number):
     return int(number, 36)
+
 
 def getSubmissionsFromES(ids):
     nested_dict = lambda: defaultdict(nested_dict)
@@ -52,11 +56,12 @@ def getSubmissionsFromES(ids):
         results[base_10_id] = source
     return results
 
+
 def getSubmissionsFromPg(ids):
     if not isinstance(ids, (list, tuple)):
         ids = [ids]
     ids_to_get_from_db = []
-    rows = DBFunctions.pgdb.execute("SELECT * FROM submission WHERE (json->>'id')::int IN %s LIMIT 5000",tuple(ids))
+    rows = DBFunctions.pgdb.execute("SELECT * FROM submission WHERE (json->>'id')::int IN %s LIMIT 5000", tuple(ids))
     results = {}
     data = {}
     if rows:

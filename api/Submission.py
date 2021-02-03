@@ -7,22 +7,23 @@ from Helpers import *
 
 class search:
     params = None
+
     def on_get(self, req, resp):
         self.start = time.time()
-        q = req.get_param('q');
+        q = req.get_param('q')
         self.params = req.params
 
         if 'ids' in self.params:
             data = self.getIds(self.params['ids'])
             end = time.time()
             data["metadata"] = {}
-            data["metadata"]["execution_time_milliseconds"] = round((end - self.start) * 1000,2)
+            data["metadata"]["execution_time_milliseconds"] = round((end - self.start) * 1000, 2)
             data["metadata"]["version"] = "v3.0"
-            resp.cache_control = ["public","max-age=2","s-maxage=2"]
-            resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+            resp.cache_control = ["public", "max-age=2", "s-maxage=2"]
+            resp.body = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             return
 
-        response = self.search("http://mars:9200/rs/submissions/_search");
+        response = self.search("http://mars:9200/rs/submissions/_search")
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
@@ -61,8 +62,9 @@ class search:
             data['aggs'] = {}
             if 'subreddit' in response['data']['aggregations']:
                 for bucket in response['data']['aggregations']['subreddit']['buckets']:
-                    bucket['score'] = round(bucket['doc_count'] / bucket['bg_count'],5)
-                newlist = sorted(response['data']['aggregations']['subreddit']['buckets'], key=lambda k: k['score'], reverse=True)
+                    bucket['score'] = round(bucket['doc_count'] / bucket['bg_count'], 5)
+                newlist = sorted(response['data']['aggregations']['subreddit']['buckets'], key=lambda k: k['score'],
+                                 reverse=True)
                 data['aggs']['subreddit'] = newlist
 
             if 'author' in response['data']['aggregations']:
@@ -89,37 +91,39 @@ class search:
 
             if 'time_of_day' in response['data']['aggregations']:
                 for bucket in response['data']['aggregations']['time_of_day']['buckets']:
-                    bucket['bg_percentage'] = round(bucket['bg_count'] * 100 / response['data']['aggregations']['time_of_day']['bg_count'], 5)
-                    bucket['doc_percentage'] = round(bucket['doc_count'] * 100 / response['data']['aggregations']['time_of_day']['doc_count'], 5)
-                    bucket['deviation_percentage'] = round(bucket['doc_percentage'] - bucket['bg_percentage'],4)
+                    bucket['bg_percentage'] = round(
+                        bucket['bg_count'] * 100 / response['data']['aggregations']['time_of_day']['bg_count'], 5)
+                    bucket['doc_percentage'] = round(
+                        bucket['doc_count'] * 100 / response['data']['aggregations']['time_of_day']['doc_count'], 5)
+                    bucket['deviation_percentage'] = round(bucket['doc_percentage'] - bucket['bg_percentage'], 4)
                     bucket['utc_hour'] = bucket['key']
                     bucket.pop('score', None)
-                    bucket.pop('key',None)
-                newlist = sorted(response['data']['aggregations']['time_of_day']['buckets'], key=lambda k: k['utc_hour'])
+                    bucket.pop('key', None)
+                newlist = sorted(response['data']['aggregations']['time_of_day']['buckets'],
+                                 key=lambda k: k['utc_hour'])
                 data['aggs']['time_of_day'] = newlist
 
-
         end = time.time()
-        data['data'] = results;
+        data['data'] = results
         data['metadata'] = {}
         data['metadata'] = response['metadata']
         data['metadata'] = self.params
-        data['metadata']['execution_time_milliseconds'] = round((end - self.start) * 1000,2)
+        data['metadata']['execution_time_milliseconds'] = round((end - self.start) * 1000, 2)
         data['metadata']['version'] = 'v3.0'
         data['metadata']['results_returned'] = len(response['data']['hits']['hits'])
         data['metadata']['timed_out'] = response['data']['timed_out']
         data['metadata']['total_results'] = response['data']['hits']['total']
         data['metadata']['shards'] = {}
         data['metadata']['shards'] = response['data']['_shards']
-        resp.cache_control = ['public','max-age=2','s-maxage=2']
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
+        resp.cache_control = ['public', 'max-age=2', 's-maxage=2']
+        resp.body = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
     def search(self, uri):
         nested_dict = lambda: defaultdict(nested_dict)
         q = nested_dict()
         q['query']['bool']['filter'] = []
         q['query']['bool']['must_not'] = []
-        self.params, q = Parameters.process(self.params,q)
+        self.params, q = Parameters.process(self.params, q)
 
         if 'q' in self.params and self.params['q'] is not None:
             sqs = nested_dict()
@@ -127,7 +131,7 @@ class search:
             sqs['simple_query_string']['default_operator'] = 'and'
             q['query']['bool']['filter'].append(sqs)
 
-        conditions = ["title","selftext"]
+        conditions = ["title", "selftext"]
         for condition in conditions:
             if condition in self.params and self.params[condition] is not None:
                 sqs = nested_dict()
@@ -147,7 +151,8 @@ class search:
                 q['query']['bool']['must_not'].append(sqs)
 
         min_doc_count = 0
-        if 'min_doc_count' in self.params and self.params['min_doc_count'] is not None and LooksLikeInt(self.params['min_doc_count']):
+        if 'min_doc_count' in self.params and self.params['min_doc_count'] is not None and LooksLikeInt(
+                self.params['min_doc_count']):
             min_doc_count = self.params['min_doc_count']
 
         if 'aggs' in self.params:
@@ -158,16 +163,17 @@ class search:
                     q['aggs']['subreddit']['significant_terms']['field'] = 'subreddit.keyword'
                     q['aggs']['subreddit']['significant_terms']['size'] = 1000
                     q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
-                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
+                    q['aggs']['subreddit']['significant_terms']['script_heuristic']['script'][
+                        'inline'] = 'params._subset_freq'
                     q['aggs']['subreddit']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'author':
                     q['aggs']['author']['terms']['field'] = 'author.keyword'
                     q['aggs']['author']['terms']['size'] = 1000
                     q['aggs']['author']['terms']['order']['_count'] = 'desc'
-                    #q['aggs']['author']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
-                    #q['aggs']['author']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
-                    #q['aggs']['author']['significant_terms']['min_doc_count'] = min_doc_count
+                    # q['aggs']['author']['significant_terms']['script_heuristic']['script']['lang'] = 'painless'
+                    # q['aggs']['author']['significant_terms']['script_heuristic']['script']['inline'] = 'params._subset_freq'
+                    # q['aggs']['author']['significant_terms']['min_doc_count'] = min_doc_count
 
                 if agg.lower() == 'created_utc':
                     q['aggs']['created_utc']['date_histogram']['field'] = 'created_utc'
@@ -230,6 +236,7 @@ class search:
         data["metadata"] = {}
         return data
 
+
 class getCommentIDs:
 
     def on_get(self, req, resp, submission_id):
@@ -237,14 +244,15 @@ class getCommentIDs:
         if submission_id[:3] == 't3_':
             submission_id = submission_id[3:]
         submission_id = base36decode(submission_id)
-        rows = DBFunctions.pgdb.execute("SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",submission_id)
+        rows = DBFunctions.pgdb.execute(
+            "SELECT (json->>'id')::bigint comment_id FROM comment WHERE (json->>'link_id')::int = %s ORDER BY comment_id ASC LIMIT 50000",
+            submission_id)
         results = []
         data = {}
         if rows:
             for row in rows:
                 comment_id = row[0]
                 results.append(base36encode(comment_id))
-        data['data'] = results;
-        resp.cache_control = ["public","max-age=5","s-maxage=5"]
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
-
+        data['data'] = results
+        resp.cache_control = ["public", "max-age=5", "s-maxage=5"]
+        resp.body = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))

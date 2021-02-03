@@ -19,7 +19,7 @@ class Analyze:
 
         if author is not None:
             terms = nested_dict()
-            terms['terms']['author'] =  [author.lower()]
+            terms['terms']['author'] = [author.lower()]
             q['query']['bool']['filter'].append(terms)
 
         q['size'] = size
@@ -40,7 +40,7 @@ class Analyze:
         request = requests.get(searchURL, data=json.dumps(q))
         response = json.loads(request.text)
 
-        if response.get('aggregations', {}).get('link_id', {}).get('buckets',{}):
+        if response.get('aggregations', {}).get('link_id', {}).get('buckets', {}):
             for row in response['aggregations']['link_id']['buckets']:
                 row['key'] = 't3_' + base36encode(row['key'])
 
@@ -48,10 +48,7 @@ class Analyze:
         data = {}
         data['data'] = response
         data['metadata'] = {}
-        data['metadata']['execution_time_milliseconds'] = round((end - start) * 1000,2)
+        data['metadata']['execution_time_milliseconds'] = round((end - start) * 1000, 2)
         data['metadata']['version'] = 'v3.0'
-        resp.cache_control = ['public','max-age=2','s-maxage=2']
-        resp.body = json.dumps(data,sort_keys=True,indent=4, separators=(',', ': '))
-
-
-
+        resp.cache_control = ['public', 'max-age=2', 's-maxage=2']
+        resp.body = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
