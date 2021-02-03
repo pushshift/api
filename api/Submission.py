@@ -23,7 +23,7 @@ class search:
             resp.body = json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
             return
 
-        response = self.search("http://mars:9200/rs/submissions/_search");
+        response = self.search("http://mars:9200/rs/submissions/_search")
         results = []
         data = {}
         for hit in response["data"]["hits"]["hits"]:
