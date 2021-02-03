@@ -54,6 +54,40 @@ def process(params,q):
     else:
         params['before'] = None
 
+    if 'retrieved_before' in params and params['retrieved_before'] is not None:
+        if LooksLikeInt(params['retrieved_before']):
+            params['retrieved_before'] = int(params['retrieved_before'])
+        elif params['retrieved_before'][-1:].lower() == "d":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 86400)
+        elif params['retrieved_before'][-1:].lower() == "h":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 3600)
+        elif params['retrieved_before'][-1:].lower() == "m":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]) * 60)
+        elif params['retrieved_before'][-1:].lower() == "s":
+            params['retrieved_before'] = int(time.time()) - (int(params['retrieved_before'][:-1]))
+        range = nested_dict()
+        range['range']['retrieved_on']['lt'] = params['retrieved_before']
+        q['query']['bool']['filter'].append(range)
+    else:
+        params['retrieved_before'] = None
+
+    if 'retrieved_after' in params and params['retrieved_after'] is not None:
+        if LooksLikeInt(params['retrieved_after']):
+            params['retrieved_after'] = int(params['retrieved_after'])
+        elif params['retrieved_after'][-1:].lower() == "d":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 86400)
+        elif params['retrieved_after'][-1:].lower() == "h":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 3600)
+        elif params['retrieved_after'][-1:].lower() == "m":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]) * 60)
+        elif params['retrieved_after'][-1:].lower() == "s":
+            params['retrieved_after'] = int(time.time()) - (int(params['retrieved_after'][:-1]))
+        range = nested_dict()
+        range['range']['retrieved_on']['lt'] = params['retrieved_after']
+        q['query']['bool']['filter'].append(range)
+    else:
+        params['retrieved_after'] = None
+
     if 'score' in params and params['score'] is not None:
         range = nested_dict()
         if params['score'][:1] == "<":
