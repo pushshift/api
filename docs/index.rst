@@ -1185,67 +1185,25 @@ https://api.pushshift.io/reddit/submission/comment\_ids/6uey5x
 List of Endpoints
 =================
 
-+---------+---------+----------+
-| Endpoin | Descrip | Status   |
-| t       | tion    |          |
-+=========+=========+==========+
-| /reddit | Search  | Active   |
-| /search | Reddit  |          |
-| /commen | Comment |          |
-| t/      | s       |          |
-+---------+---------+----------+
-| /reddit | Search  | Active   |
-| /search | Reddit  |          |
-| /submis | Submiss |          |
-| sion/   | ions    |          |
-+---------+---------+----------+
-| /reddit | Retriev | Active   |
-| /submis | e       |          |
-| sion/co | comment |          |
-| mment\_ | ids for |          |
-| ids/{ba | a       |          |
-| se36-su | submiss |          |
-| bmissio | ion     |          |
-| n-id}   | object  |          |
-+---------+---------+----------+
-| /reddit | Analyze | In       |
-| /analyz | a       | Developm |
-| e/user/ | Reddit  | ent      |
-| {author | user's  |          |
-| -name}  | activit |          |
-|         | y       |          |
-+---------+---------+----------+
-| /reddit | Analyze | In       |
-| /term/f | a term  | Developm |
-| requenc | based   | ent      |
-| y/{term | on      |          |
-| }       | activit |          |
-|         | y       |          |
-+---------+---------+----------+
-| /reddit | Search  | In       |
-| /search | Both    | Developm |
-| /all/   | Comment | ent      |
-|         | and     |          |
-|         | Submiss |          |
-|         | ions    |          |
-+---------+---------+----------+
-| /reddit | Find    | In       |
-| /trendi | out who | Developm |
-| ng/peop | is      | ent      |
-| le      | trendin |          |
-|         | g       |          |
-|         | on      |          |
-|         | Reddit  |          |
-+---------+---------+----------+
-| /reddit | Find    | In       |
-| /search | releven | Developm |
-| /links  | t       | ent      |
-|         | links   |          |
-|         | being   |          |
-|         | shared  |          |
-|         | on      |          |
-|         | Reddit  |          |
-+---------+---------+----------+
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| Endpoint                                                 | Description                                     | Status           |
++==========================================================+=================================================+==================+
+| /reddit/search/comment                                   | Search Reddit comments                          | Active           |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/search/submission                                | Search Reddit submissions                       | Active           |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/submission/comment\_ids/{base36-submission-id}   | Retrieve comment ids for a submission object    | Active           |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/analyze/user/{author-name}                       | Analyze a Reddit user's activity                | In Development   |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/term/frequency/{term}                            | Analyze a term based on activity                | In Development   |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/search/all/                                      | Search both comments and submissions            | In Development   |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/trending/people                                  | Find out who is trending on Reddit              | In Development   |
++----------------------------------------------------------+-------------------------------------------------+------------------+
+| /reddit/links                                            | Find relevant links being shared on Reddit      | In Development   |
++----------------------------------------------------------+-------------------------------------------------+------------------+
 
-To be continued (Currently under active development) ...
+To be continued ...
 ========================================================
